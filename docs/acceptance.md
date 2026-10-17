@@ -11,7 +11,8 @@
 - Connect opens a closed Safari and confirms its existing Automation permission; Chrome and Dia show connected.
 - Website schedules default to enabled when browser control is connected. Enabled weekly and one-time schedules save; editing reopens the saved values. No weekdays disables Save with an inline explanation.
 - Block-list Websites/Apps controls, schedule day controls, Focus layout, and Settings were visually inspected on the built-in display.
-- Safari redirected an existing page, released it during a one-minute pause, then redirected automatically at pause expiry. The pause allowance reached zero.
+- Safari redirected an existing page, released it during a one-minute pause, then redirected automatically at pause expiry. The pause allowance reached zero. Natural session expiry restored access.
+- Closing Safari retained its “Ready when opened” state. Test rules and schedules were removed, and the original empty setup was restored.
 - Build scripts now default to two concurrent Xcode jobs; further build verification runs in GitHub Actions.
 
 ## Earlier enforcement baseline — build 8
@@ -33,7 +34,7 @@
 - Network filtering was then turned off when browser control became the requested default. Switching methods was exercised on build 8; the optional network mode showed the filter off, and Browser control was restored as the saved selection.
 - Test lists, schedules, and browser windows were removed. No session remains active; quick-session defaults are 25 minutes with one five-minute pause.
 
-Arc, Brave, Edge, and Opera adapters are implemented but not runtime-qualified. Safari natural session expiry has not yet been separately exercised. Network traffic blocking has not been qualified.
+Arc, Brave, Edge, and Opera adapters are implemented but not runtime-qualified. Network traffic blocking has not been qualified.
 
 ## Automated
 
@@ -66,7 +67,7 @@ The unsigned-development build deliberately contains no activated system extensi
 ## Browser control — remaining validation
 
 - Connect each browser and verify denied permission is explained.
-- Repeat the Chrome/Dia checks in Arc, Brave, Edge, and Opera; check natural session expiry in Safari.
+- Repeat the Chrome/Dia checks in Arc, Brave, Edge, and Opera.
 - Multiple profiles, private windows, and tabs closing mid-scan.
 - Early resume in Chrome/Dia, overlapping browser sessions, scheduled browser sessions, and sleep/wake.
 - CPU usage with many windows and tabs.

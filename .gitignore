@@ -6,3 +6,6 @@ build/
 Signing.xcconfig
 Config/Signing.xcconfig
 *.provisionprofile
+*.mobileprovision
+*.p12
+*.p8

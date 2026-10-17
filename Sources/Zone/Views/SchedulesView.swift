@@ -86,7 +86,8 @@ private struct ScheduleRow: View {
             }
             Spacer(minLength: 12)
             VStack(alignment: .trailing, spacing: 10) {
-                Toggle(status, isOn: Binding(get: { schedule.isEnabled }, set: setEnabled))
+                // A closure avoids a Swift 6.2 IRGen crash converting the isolated callback directly.
+                Toggle(status, isOn: Binding(get: { schedule.isEnabled }, set: { enabled in setEnabled(enabled) }))
                     .toggleStyle(.switch).controlSize(.small).fixedSize()
                     .accessibilityLabel("Enable \(schedule.name)")
                 HStack {
