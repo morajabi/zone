@@ -1,0 +1,62 @@
+name: Build release artifact
+
+on:
+  workflow_dispatch:
+    inputs:
+      bundle_id:
+        description: App bundle identifier matching the release provisioning profiles
+        required: true
+        type: string
+      team_id:
+        description: Apple Developer team identifier (public metadata, not a credential)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-build-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 30
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.2.app/Contents/Developer
+      ZONE_BUILD_JOBS: 3
+      ZONE_RELEASE_BUNDLE_ID: ${{ inputs.bundle_id }}
+      ZONE_RELEASE_TEAM_ID: ${{ inputs.team_id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Test core behavior
+        run: swift test --jobs "$ZONE_BUILD_JOBS"
+      - name: Build universal Release app without signing credentials
+        run: ./scripts/build-release-unsigned.sh
+      - name: Upload unsigned app and source manifest
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: zone-unsigned-${{ github.sha }}
+          path: |
+            build/release-artifacts/Zone-unsigned.zip
+            build/release-artifacts/build-manifest.json
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+      - name: Summarize artifact
+        run: |
+          python3 - <<'PY'
+          import json, os
+          with open("build/release-artifacts/build-manifest.json") as source:
+              manifest = json.load(source)
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
+              summary.write(f"## Zone {manifest['version']} ({manifest['build']})\n\n")
+              summary.write(f"Source: `{manifest['source_revision']}`\n\n")
+              summary.write("Universal macOS app: arm64 and x86_64.\n\n")
+              summary.write("This artifact is unsigned. Download, verify its manifest, then sign and notarize it before publishing a release.\n")
+          PY

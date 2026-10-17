@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">Zone app icon</title>
+  <desc id="desc">A pale green open ring and still point on a deep green rounded square.</desc>
+  <defs>
+    <linearGradient id="tile" x1="512" y1="64" x2="512" y2="960" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#294940"/>
+      <stop offset="1" stop-color="#162f2a"/>
+    </linearGradient>
+    <linearGradient id="ring" x1="512" y1="224" x2="512" y2="800" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#edf7ef"/>
+      <stop offset="1" stop-color="#c5e3d5"/>
+    </linearGradient>
+  </defs>
+  <rect x="64" y="64" width="896" height="896" rx="200" fill="url(#tile)"/>
+  <rect x="64.5" y="64.5" width="895" height="895" rx="199.5" stroke="#fff" stroke-opacity=".13"/>
+  <path d="M747.862849 426.152944A251 251 0 1 1 597.847056 276.137152" stroke="url(#ring)" stroke-width="64" stroke-linecap="round"/>
+  <circle cx="512" cy="512" r="48" fill="#9bddc0"/>
+</svg>

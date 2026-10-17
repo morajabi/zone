@@ -9,45 +9,73 @@ struct BlockListsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-                if model.document.blockLists.isEmpty {
-                    ContentUnavailableView {
-                        Label("No Block Lists", systemImage: "hand.raised")
-                    } description: {
-                        Text("Choose websites and apps to block during a session.")
-                    } actions: {
-                        Button("Create a Block List…", action: model.newList).buttonStyle(.borderedProminent)
-                    }
+            if model.document.blockLists.isEmpty {
+                ContentUnavailableView {
+                    Label("No Block Lists", systemImage: "hand.raised")
+                } description: {
+                    Text("Choose websites and apps to block during a session.")
+                } actions: {
+                    Button("Create a Block List…") { model.newList() }.buttonStyle(.borderedProminent)
                 }
+            } else {
                 List(model.document.blockLists) { list in
-                    HStack(spacing: 16) {
-                        Image(systemName: "hand.raised").font(.title2).foregroundStyle(.secondary)
-                            .frame(width: 30).accessibilityHidden(true)
-                        VStack(alignment: .leading, spacing: 5) {
-                            Text(list.name).font(.headline)
-                            RuleSummary(list: list)
-                            if !list.isEmpty {
-                                Text((list.domains + list.apps.map(\.name)).joined(separator: ", "))
-                                    .font(.caption).foregroundStyle(.secondary).lineLimit(2)
-                            }
-                        }
-                        Spacer()
-                        Button("Edit…") { model.editingList = list }.accessibilityLabel("Edit \(list.name)")
-                        Menu {
-                            Button("Duplicate") {
-                                model.saveList(BlockList(name: list.name + " Copy", domains: list.domains, apps: list.apps))
-                            }
-                            Button("Delete", role: .destructive) { deleting = list }
-                        } label: { Image(systemName: "ellipsis") }.menuStyle(.borderlessButton).frame(width: 22).accessibilityLabel("Actions for \(list.name)")
-                    }.padding(.vertical, 12).accessibilityElement(children: .contain)
+                    BlockListRow(list: list, edit: { model.editingList = list }, duplicate: {
+                        model.saveList(BlockList(name: list.name + " Copy", domains: list.domains, apps: list.apps))
+                    }, delete: { deleting = list })
                 }.listStyle(.inset)
-                Text("Edits apply to future sessions. Running sessions keep their original block list.")
-                    .font(.caption).foregroundStyle(.secondary).padding(16)
+            }
+            Text("Edits apply to future sessions. Running sessions keep their original block list.")
+                .font(.caption).foregroundStyle(.secondary).padding(16)
         }
         .navigationTitle("Block Lists")
-        .toolbar { Button("New Block List", systemImage: "plus", action: model.newList).help("New Block List (⌘N)") }
+        .toolbar { Button("New Block List", systemImage: "plus") { model.newList() }.help("New Block List (⌘N)") }
         .confirmationDialog("Delete this block list?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }), titleVisibility: .visible) {
             Button("Delete List", role: .destructive) { if let deleting { model.deleteList(deleting) }; deleting = nil }
         }
+    }
+}
+
+private struct BlockListRow: View {
+    let list: BlockList
+    let edit: () -> Void
+    let duplicate: () -> Void
+    let delete: () -> Void
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Button { edit() } label: {
+                HStack(spacing: 14) {
+                    Image(systemName: "hand.raised").font(.title2).foregroundStyle(.secondary)
+                        .frame(width: 30).accessibilityHidden(true)
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text(list.name).font(.headline)
+                        RuleSummary(list: list)
+                        if !list.isEmpty {
+                            Text((list.domains + list.apps.map(\.name)).joined(separator: ", "))
+                                .font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                        }
+                    }
+                    Spacer(minLength: 12)
+                    Image(systemName: "chevron.right").font(.caption.weight(.medium))
+                        .foregroundStyle(.tertiary).accessibilityHidden(true)
+                }.frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Edit \(list.name)")
+            .accessibilityValue(RuleSummary.text(for: list))
+            .contextMenu {
+                Button("Duplicate") { duplicate() }
+                Button("Delete", role: .destructive) { delete() }
+            }
+            Menu {
+                Button("Duplicate") { duplicate() }
+                Button("Delete", role: .destructive) { delete() }
+            } label: {
+                Image(systemName: "ellipsis")
+            }
+            .menuStyle(.borderlessButton).menuIndicator(.hidden).frame(width: 22)
+            .accessibilityLabel("Actions for \(list.name)").help("More actions")
+        }.padding(.vertical, 12).accessibilityElement(children: .contain)
     }
 }
 

@@ -44,7 +44,7 @@ struct SchedulesView: View {
             }.padding(16)
         }
         .navigationTitle("Schedules")
-        .toolbar { Button("New Schedule", systemImage: "plus", action: model.newSchedule).disabled(model.availableLists.isEmpty) }
+        .toolbar { Button("New Schedule", systemImage: "plus") { model.newSchedule() }.disabled(model.availableLists.isEmpty) }
         .confirmationDialog("Delete this schedule?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }), titleVisibility: .visible) {
             Button("Delete Schedule", role: .destructive) { if let deleting { model.deleteSchedule(deleting) }; deleting = nil }
         } message: { Text("A session already running will finish as planned.") }
@@ -70,31 +70,44 @@ private struct ScheduleRow: View {
     }
 
     var body: some View {
-        HStack(spacing: 16) {
-            Image(systemName: schedule.kind == .weekly ? "calendar.badge.clock" : "calendar")
-                .font(.title2).foregroundStyle(.secondary).frame(width: 30).accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 5) {
-                Text(schedule.name).font(.headline)
-                Text(summary).font(.callout).foregroundStyle(.secondary)
-                HStack(spacing: 6) {
-                    if let list = model.document.blockLists.first(where: { $0.id == schedule.blockListID }) {
-                        Text(list.name)
-                        Text("·")
+        HStack(spacing: 12) {
+            Button { model.editingSchedule = schedule } label: {
+                HStack(spacing: 14) {
+                    Image(systemName: schedule.kind == .weekly ? "calendar.badge.clock" : "calendar")
+                        .font(.title2).foregroundStyle(.secondary).frame(width: 30).accessibilityHidden(true)
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text(schedule.name).font(.headline)
+                        Text(summary).font(.callout).foregroundStyle(.secondary)
+                        HStack(spacing: 6) {
+                            if let list = model.document.blockLists.first(where: { $0.id == schedule.blockListID }) {
+                                Text(list.name)
+                                Text("·")
+                            }
+                            Label(schedule.options.mode.title, systemImage: schedule.options.mode == .locked ? "lock" : "circle.dotted")
+                        }.font(.caption).foregroundStyle(.secondary)
                     }
-                    Label(schedule.options.mode.title, systemImage: schedule.options.mode == .locked ? "lock" : "circle.dotted")
-                }.font(.caption).foregroundStyle(.secondary)
+                    Spacer(minLength: 12)
+                    Image(systemName: "chevron.right").font(.caption.weight(.medium))
+                        .foregroundStyle(.tertiary).accessibilityHidden(true)
+                }.frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
             }
-            Spacer(minLength: 12)
-            VStack(alignment: .trailing, spacing: 10) {
-                // A closure avoids a Swift 6.2 IRGen crash converting the isolated callback directly.
-                Toggle(status, isOn: Binding(get: { schedule.isEnabled }, set: { enabled in setEnabled(enabled) }))
-                    .toggleStyle(.switch).controlSize(.small).fixedSize()
-                    .accessibilityLabel("Enable \(schedule.name)")
-                HStack {
-                    Button("Edit…") { model.editingSchedule = schedule }.accessibilityLabel("Edit \(schedule.name)")
-                    Button(action: delete) { Image(systemName: "trash") }.accessibilityLabel("Delete \(schedule.name)")
-                }.controlSize(.small)
+            .buttonStyle(.plain)
+            .accessibilityLabel("Edit \(schedule.name)")
+            .accessibilityValue(summary)
+            .contextMenu {
+                Button("Delete", role: .destructive) { delete() }
             }
+            // A closure avoids a Swift 6.2 IRGen crash converting the isolated callback directly.
+            Toggle(status, isOn: Binding(get: { schedule.isEnabled }, set: { enabled in setEnabled(enabled) }))
+                .toggleStyle(.switch).controlSize(.small).fixedSize()
+                .accessibilityLabel("Enable \(schedule.name)")
+            Menu {
+                Button("Delete", role: .destructive) { delete() }
+            } label: {
+                Image(systemName: "ellipsis")
+            }
+            .menuStyle(.borderlessButton).menuIndicator(.hidden).frame(width: 22)
+            .accessibilityLabel("Actions for \(schedule.name)").help("More actions")
         }.padding(.vertical, 12).accessibilityElement(children: .contain)
     }
 
@@ -187,7 +200,7 @@ struct ScheduleEditor: View {
                 Toggle("Enabled", isOn: $schedule.isEnabled)
             }.formStyle(.columns)
             Divider()
-            SessionOptionsEditor(options: $schedule.options)
+            ScheduleOptionsDisclosure(options: $schedule.options)
             Text("Changes apply to future sessions. Scheduled app blocks may close unsaved work.")
                 .font(.caption).foregroundStyle(.secondary)
             if let message = validationMessage ?? saveError {
@@ -222,5 +235,19 @@ struct ScheduleEditor: View {
             let parts = Calendar.autoupdatingCurrent.dateComponents([.hour, .minute], from: date)
             schedule[keyPath: keyPath] = (parts.hour ?? 0) * 60 + (parts.minute ?? 0)
         })
+    }
+}
+
+private struct ScheduleOptionsDisclosure: View {
+    @Binding var options: SessionOptions
+    @State private var isExpanded = false
+
+    var body: some View {
+        DisclosureGroup(isExpanded: $isExpanded) {
+            SessionOptionsEditor(options: $options).padding(.top, 12)
+        } label: {
+            Text(SessionOptionsSummary.text(for: options))
+                .font(.callout).foregroundStyle(.secondary)
+        }
     }
 }

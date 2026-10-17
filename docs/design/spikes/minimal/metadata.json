@@ -1,0 +1,90 @@
+[
+  {
+    "id": "m01",
+    "title": "A Quiet Sentence",
+    "file": "01-quiet-sentence.html",
+    "rationale": "An editable sentence replaces the conventional setup form. A single prominent action is all that remains once the defaults are right.",
+    "visibleActionCount": 2,
+    "strength": "The least visual work before a familiar session; duration and block list stay visible in plain language.",
+    "tradeoff": "Inline selections can be less discoverable than labeled form rows.",
+    "ranking": 1,
+    "layout": "sentence"
+  },
+  {
+    "id": "m02",
+    "title": "Time First",
+    "file": "02-time-first.html",
+    "rationale": "Duration is the main object. Starting a session changes that same object into a countdown, preserving spatial continuity.",
+    "visibleActionCount": 2,
+    "strength": "Exceptionally clear active state and a small interaction footprint.",
+    "tradeoff": "The large time field can outweigh the importance of reviewing blocked apps.",
+    "ranking": 2,
+    "layout": "timer"
+  },
+  {
+    "id": "m03",
+    "title": "Three Rows",
+    "file": "03-three-rows.html",
+    "rationale": "A compact native-style group summarizes what, how long, and the session rules. Only one toolbar action is prominent.",
+    "visibleActionCount": 2,
+    "strength": "Familiar, explicit, easy to implement with native Form and LabeledContent.",
+    "tradeoff": "Functional and plain; less emotionally calm than the sentence approach.",
+    "ranking": 4,
+    "layout": "rows"
+  },
+  {
+    "id": "m04",
+    "title": "Quiet Inspector",
+    "file": "04-quiet-inspector.html",
+    "rationale": "Move preparation to a persistent side inspector while the central surface is reserved for the current session.",
+    "visibleActionCount": 2,
+    "strength": "Good for people who change options often; keeps active session visually stable.",
+    "tradeoff": "A permanent inspector adds structure and consumes width for a simple task.",
+    "ranking": 7,
+    "layout": "inspector"
+  },
+  {
+    "id": "m05",
+    "title": "Saved Rhythms",
+    "file": "05-saved-rhythms.html",
+    "rationale": "Choose a familiar duration-and-list recipe from a short list. The detail is a single review rather than a form.",
+    "visibleActionCount": 2,
+    "strength": "Fast repeat sessions with clear names and no bank of duration buttons.",
+    "tradeoff": "Adds a preset concept that Zone does not currently need; may complicate first use.",
+    "ranking": 6,
+    "layout": "recipes"
+  },
+  {
+    "id": "m06",
+    "title": "The Focus Line",
+    "file": "06-focus-line.html",
+    "rationale": "A keyboard-friendly composer accepts a duration, then exposes only its interpreted result and one start action.",
+    "visibleActionCount": 2,
+    "strength": "Fast for frequent keyboard users, with natural-language intent and minimal chrome.",
+    "tradeoff": "Natural-language parsing introduces an unnecessary mental model and ambiguity.",
+    "ranking": 8,
+    "layout": "command"
+  },
+  {
+    "id": "m07",
+    "title": "Today, Gently",
+    "file": "07-today-gently.html",
+    "rationale": "Place spontaneous focus among the day’s scheduled sessions. Now is a single actionable timeline item.",
+    "visibleActionCount": 2,
+    "strength": "Makes recurring sessions understandable without opening a separate calendar.",
+    "tradeoff": "Schedule-first hierarchy distracts people who mainly use one-off sessions.",
+    "ranking": 5,
+    "layout": "agenda"
+  },
+  {
+    "id": "m08",
+    "title": "The Small Window",
+    "file": "08-small-window.html",
+    "rationale": "Treat the menu-bar panel as the entire everyday product: two setup rows, a quiet rule summary, and one primary action.",
+    "visibleActionCount": 2,
+    "strength": "Best fit for a menu-bar utility. Maps cleanly to a 320px native popover.",
+    "tradeoff": "List and schedule editing still need a larger supporting window.",
+    "ranking": 3,
+    "layout": "popover"
+  }
+]

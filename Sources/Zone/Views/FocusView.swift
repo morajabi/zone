@@ -7,7 +7,7 @@ struct FocusView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
+            VStack(spacing: 28) {
                 BlockingNotice(model: model)
                 ForEach(model.activeSessions) { session in
                     SessionCard(session: session, model: model)
@@ -21,30 +21,22 @@ struct FocusView: View {
                         .frame(maxWidth: .infinity).padding(.vertical, 50)
                 } else {
                     if model.activeSessions.isEmpty {
-                        QuickSessionSection(model: model)
+                        QuickSessionEditor(model: model).padding(.top, 16)
                     } else {
                         DisclosureGroup("Start Another Session", isExpanded: $showNewSession) {
-                            QuickSessionSection(model: model).padding(.top, 12)
+                            QuickSessionEditor(model: model).padding(.top, 16)
                         }
                     }
                     UpcomingSessionView(model: model)
                 }
-                Label("Zone keeps running in the menu bar when you close this window.", systemImage: "menubar.rectangle")
-                    .font(.caption).foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .center)
             }
-            .padding(24).frame(maxWidth: 640).frame(maxWidth: .infinity)
-        }.navigationTitle("Focus")
-    }
-}
-
-private struct QuickSessionSection: View {
-    let model: ZoneModel
-    var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text("New Session").font(.title2.weight(.semibold))
-            QuickSessionEditor(model: model)
-        }.padding(20).modifier(PanelStyle())
+            .padding(32).frame(maxWidth: 460).frame(maxWidth: .infinity)
+        }
+        .navigationTitle("Focus")
+        .safeAreaInset(edge: .bottom) {
+            Text("Always here in your menu bar.")
+                .font(.caption).foregroundStyle(.tertiary).padding(.bottom, 16)
+        }
     }
 }
 
@@ -75,72 +67,55 @@ struct QuickSessionEditor: View {
     var compact = false
     @State private var showOptions = false
     @State private var confirmStart = false
-    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(spacing: compact ? 20 : 24) {
             if model.availableLists.isEmpty {
                 FirstListPrompt(model: model, compact: compact).padding(.vertical, 12)
             } else {
-                Picker("Block list", selection: $model.selectedListID) {
-                    ForEach(model.document.blockLists) { list in
-                        Text(list.name).tag(Optional(list.id))
-                    }
-                }
-                if let list = model.selectedList {
-                    HStack {
-                        RuleSummary(list: list).font(.caption).foregroundStyle(.secondary)
-                        Spacer()
-                        Button("Edit…") {
-                            openWindow(id: "main")
-                            NSApp.activate()
-                            model.editingList = list
-                        }
-                            .buttonStyle(.link).font(.caption)
-                    }
-                }
-                Divider()
-                HStack {
-                    Text("Duration")
-                    Spacer()
-                    TextField("Minutes", text: $model.quickMinutesText)
-                        .frame(width: 64).textFieldStyle(.roundedBorder).multilineTextAlignment(.trailing)
+                VStack(spacing: 0) {
+                    TextField("25", text: $model.quickMinutesText)
+                        .font(.system(size: compact ? 68 : 88, weight: .thin, design: .rounded))
+                        .monospacedDigit().multilineTextAlignment(.center).textFieldStyle(.plain)
+                        .frame(width: compact ? 220 : 270)
                         .accessibilityLabel("Session duration in minutes")
-                    Text("minutes").foregroundStyle(.secondary)
-                }
-                HStack(spacing: 8) {
-                    ForEach([25, 45, 60, 90], id: \.self) { minutes in
-                        Button("\(minutes) min") { model.quickMinutes = minutes }
-                            .frame(maxWidth: .infinity)
-                            .accessibilityAddTraits(model.quickMinutes == minutes ? .isSelected : [])
-                    }
-                }.buttonStyle(.bordered).controlSize(.small)
+                        .help("Enter a duration from 1 to 1,440 minutes")
+                    Text("minutes of focus").font(.callout).foregroundStyle(.secondary)
+                }.frame(maxWidth: .infinity).padding(.vertical, compact ? 8 : 12)
+
                 if !(1...1440).contains(model.quickMinutes) {
                     Text("Enter 1–1,440 minutes.").font(.caption).foregroundStyle(.red)
                 }
-                if compact {
-                    DisclosureGroup(isExpanded: $showOptions) {
-                        SessionOptionsEditor(options: $model.quickOptions).padding(.top, 10)
-                    } label: {
-                        Text(model.quickOptions.mode.title)
-                        Text("· \(model.quickOptions.pause.allowance == 0 ? "No pauses" : "Pauses allowed")")
-                            .foregroundStyle(.secondary)
+
+                VStack(alignment: .leading, spacing: 14) {
+                    HStack {
+                        Text("Block").foregroundStyle(.secondary)
+                        Spacer()
+                        Picker("Block list", selection: $model.selectedListID) {
+                            ForEach(model.availableLists) { list in
+                                Text(list.name).tag(Optional(list.id))
+                            }
+                        }.labelsHidden().frame(maxWidth: compact ? 210 : 280, alignment: .trailing)
                     }
-                } else {
-                    SessionOptionsEditor(options: $model.quickOptions)
+                    if let list = model.selectedList {
+                        RuleSummary(list: list)
+                    }
+                    DisclosureGroup(isExpanded: $showOptions) {
+                        SessionOptionsEditor(options: $model.quickOptions).padding(.top, 12)
+                    } label: {
+                        Text(SessionOptionsSummary.text(for: model.quickOptions))
+                            .font(.callout).foregroundStyle(.secondary)
+                    }
                 }
+
                 if model.selectedList?.domains.isEmpty == false && !model.websiteBlockingReady {
                     BrowserSetupPrompt(model: model)
-                }
-                if model.selectedList?.isEmpty == true {
-                    Text("Add a website or app to this list before starting.")
-                        .font(.caption).foregroundStyle(.secondary)
                 }
                 Button {
                     if model.quickOptions.mode == .locked || model.selectedList?.apps.isEmpty == false { confirmStart = true }
                     else { model.startQuickSession() }
                 } label: {
-                    Label("Start Session", systemImage: model.quickOptions.mode == .locked ? "lock.fill" : "play.fill")
+                    Text(model.quickOptions.mode == .locked ? "Start Locked Session" : "Start Focus")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent).controlSize(.large)
@@ -162,15 +137,20 @@ private struct UpcomingSessionView: View {
     let model: ZoneModel
     var body: some View {
         if let next = model.nextScheduledSession {
-            HStack(spacing: 12) {
-                Image(systemName: "calendar").foregroundStyle(.secondary)
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(next.name).font(.callout.weight(.medium))
-                    Text("Starts \(next.start, format: .dateTime.weekday().month(.abbreviated).day().hour().minute())")
-                        .font(.caption).foregroundStyle(.secondary)
-                }
-                Spacer()
-                Button("Schedules") { model.page = .schedules }.buttonStyle(.link)
+            VStack(spacing: 20) {
+                Divider()
+                Button { model.page = .schedules } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "calendar").foregroundStyle(.secondary)
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(next.name).font(.callout.weight(.medium))
+                            Text("Starts \(next.start, format: .dateTime.weekday().month(.abbreviated).day().hour().minute())")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right").font(.caption2).foregroundStyle(.tertiary)
+                    }.contentShape(Rectangle())
+                }.buttonStyle(.plain).help("View schedules")
             }
         }
     }

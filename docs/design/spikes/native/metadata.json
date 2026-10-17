@@ -1,0 +1,121 @@
+{
+  "family": "Native macOS patterns",
+  "patternEvidence": "Apple Native App Pattern Atlas: macOS 27.0, build 26A5416b, August 22, 2026. Notes master-detail, Calendar toolbar roles, separate settings, scoped sheets. Clock and Reminders styling is an interpretation, not a direct captured implementation claim.",
+  "actionCountDefinition": "Visible idle buttons, inputs, and disclosure controls, including navigation but excluding macOS window chrome.",
+  "spikes": [
+    {
+      "id": "01-clock-face",
+      "title": "Clock Face",
+      "windowTitle": "Focus",
+      "rationale": "Clock-style timer owns the window; a short inline summary opens rules and mode instead of exposing a setup form.",
+      "visibleActionCount": 6,
+      "strength": "Clearest idle-to-active transition and the least setup noise in a full window.",
+      "tradeoff": "Large timer uses space that a compact menu-bar utility may not need.",
+      "file": "01-clock-face.html"
+    },
+    {
+      "id": "02-reminders-lists",
+      "title": "List First",
+      "windowTitle": "Distractions",
+      "rationale": "Reminders-style source list treats the block list as a stable object and the session as its primary action.",
+      "visibleActionCount": 8,
+      "strength": "Scales naturally to several block lists with familiar sidebar navigation.",
+      "tradeoff": "Sidebar and duplicate list affordance add weight for a single-list user.",
+      "file": "02-reminders-lists.html"
+    },
+    {
+      "id": "03-notes-plan",
+      "title": "Session Library",
+      "windowTitle": "Sessions",
+      "rationale": "Notes-style master-detail layout places ad-hoc and recurring sessions in one browsable library.",
+      "visibleActionCount": 7,
+      "strength": "Scheduled and one-off focus share a clear mental model.",
+      "tradeoff": "Mixes session templates and schedules; may imply persistent sessions that Zone does not yet model.",
+      "file": "03-notes-plan.html"
+    },
+    {
+      "id": "04-menu-panel",
+      "title": "Menu Bar Essential",
+      "windowTitle": "Zone",
+      "rationale": "A small menu-bar panel has one primary action, a duration, and two descriptive navigation rows.",
+      "visibleActionCount": 5,
+      "strength": "Best fit for a menu-bar utility; low visual effort, every advanced setting one step away.",
+      "tradeoff": "Rule and schedule management needs a deeper view or the main window.",
+      "file": "04-menu-panel.html"
+    },
+    {
+      "id": "05-today-agenda",
+      "title": "Today Agenda",
+      "windowTitle": "Today",
+      "rationale": "A Calendar/Reminders-inspired agenda positions an immediate session in the day next to scheduled work.",
+      "visibleActionCount": 6,
+      "strength": "Explains when focus happens and makes recurring sessions visible without a separate destination.",
+      "tradeoff": "Calendar context competes with the simple need to start a timer.",
+      "file": "05-today-agenda.html"
+    },
+    {
+      "id": "06-unified-outline",
+      "title": "One Outline",
+      "windowTitle": "Focus",
+      "rationale": "A single vertical document uses native disclosure rows for rules, session policy, and schedules.",
+      "visibleActionCount": 5,
+      "strength": "Every feature remains discoverable without a sidebar or button grid.",
+      "tradeoff": "Expanded sections can become long; timer hierarchy is less distinctive.",
+      "file": "06-unified-outline.html"
+    },
+    {
+      "id": "07-context-inspector",
+      "title": "Quiet Inspector",
+      "windowTitle": "Focus",
+      "rationale": "The timer has a quiet canvas; a standard contextual inspector reveals configuration only when needed.",
+      "visibleActionCount": 4,
+      "strength": "Lowest persistent visual density; strong separation between doing and configuring.",
+      "tradeoff": "Inspector can feel excessive for three fields and requires more window width.",
+      "file": "07-context-inspector.html"
+    },
+    {
+      "id": "08-toolbar-tabs",
+      "title": "Clock Toolbar",
+      "windowTitle": "Focus",
+      "rationale": "Clock-like icon-and-label toolbar destinations replace a sidebar while keeping focus, schedules, and blocks reachable.",
+      "visibleActionCount": 7,
+      "strength": "Predictable navigation with native controls and no duplicated navigation links.",
+      "tradeoff": "Three persistent destinations still consume space in a small utility.",
+      "file": "08-toolbar-tabs.html"
+    }
+  ],
+  "ranking": [
+    {
+      "id": "04-menu-panel",
+      "reason": "Best product fit: compact, one primary action, descriptive rows, no always-visible mode or pause form."
+    },
+    {
+      "id": "01-clock-face",
+      "reason": "Best full-window companion: immediate comprehension, clear active state, configuration reduced to short links."
+    },
+    {
+      "id": "06-unified-outline",
+      "reason": "Simplest full-feature architecture without a sidebar; useful disclosure treatment."
+    },
+    {
+      "id": "08-toolbar-tabs",
+      "reason": "Familiar navigation but less minimal than the top three."
+    },
+    {
+      "id": "07-context-inspector",
+      "reason": "Strong calmness; configuration feels slightly too distant."
+    },
+    {
+      "id": "02-reminders-lists",
+      "reason": "Good for multiple lists, unnecessarily wide for the current single-list use case."
+    },
+    {
+      "id": "05-today-agenda",
+      "reason": "Useful if schedules become central, adds timeline structure today."
+    },
+    {
+      "id": "03-notes-plan",
+      "reason": "Elegant library model, requires a product concept not yet present in Zone."
+    }
+  ]
+}

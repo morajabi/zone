@@ -58,6 +58,15 @@ struct BlockingNotice: View {
     }
 }
 
+enum SessionOptionsSummary {
+    static func text(for options: SessionOptions) -> String {
+        let allowance = options.pause.allowance
+        let pauses = allowance == 0 ? "No pauses" : allowance == 1 ? "1 pause" : "\(allowance) pauses"
+        let duration = allowance == 0 ? "" : ", \(options.pause.minutes) min"
+        return "\(options.mode.title) · \(pauses)\(duration)"
+    }
+}
+
 struct SessionOptionsEditor: View {
     @Binding var options: SessionOptions
 
@@ -99,56 +108,66 @@ struct SessionCard: View {
 
     private var paused: Bool { session.isPaused(at: model.now) }
     private var remaining: String {
-        let seconds = max(0, Int(ceil(session.endsAt.timeIntervalSince(model.now))))
+        let until = paused ? session.pausedUntil ?? session.endsAt : session.endsAt
+        let seconds = max(0, Int(ceil(min(until, session.endsAt).timeIntervalSince(model.now))))
         if seconds >= 3600 { return String(format: "%d:%02d:%02d", seconds / 3600, seconds / 60 % 60, seconds % 60) }
         return String(format: "%02d:%02d", seconds / 60, seconds % 60)
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 5) {
-                    Text(session.name).font(.headline)
-                    Label(paused ? "Paused" : session.options.mode == .locked ? "Locked session" : "Focusing",
-                          systemImage: paused ? "pause.circle" : session.options.mode == .locked ? "lock" : "circle.inset.filled")
-                        .font(.caption).foregroundStyle(paused ? .orange : .secondary)
+        VStack(spacing: compact ? 18 : 24) {
+            HStack {
+                Text(session.name).font(.headline).lineLimit(2)
+                Spacer()
+                if session.options.mode == .locked {
+                    Image(systemName: "lock.fill").foregroundStyle(.secondary)
+                        .accessibilityLabel("Locked until the end")
                 }
-                Spacer(minLength: 12)
-                Text(remaining).font(.system(size: compact ? 27 : 38, weight: .light, design: .rounded)).monospacedDigit()
-                    .accessibilityLabel("\(remaining) remaining")
             }
-            if paused, let until = session.pausedUntil {
-                Text("Blocking resumes at \(until, format: .dateTime.hour().minute().second()). The session still ends at \(session.endsAt, format: .dateTime.hour().minute()).")
-                    .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-            } else {
-                HStack {
-                    RuleSummary(list: session.blockList)
-                    Spacer()
-                    Text("Until \(session.endsAt, format: .dateTime.hour().minute())")
+            VStack(spacing: 4) {
+                Text(remaining)
+                    .font(.system(size: compact ? 52 : 72, weight: .thin, design: .rounded))
+                    .monospacedDigit().minimumScaleFactor(0.6).lineLimit(1)
+                    .accessibilityLabel("\(remaining) \(paused ? "of pause remaining" : "remaining")")
+                Text(paused ? "Pause remaining" : "Time remaining")
+                    .font(.callout).foregroundStyle(paused ? .orange : .secondary)
+            }.frame(maxWidth: .infinity).padding(.vertical, 8)
+
+            VStack(spacing: 6) {
+                RuleSummary(list: session.blockList)
+                Text("Session ends at \(session.endsAt, format: .dateTime.hour().minute())")
+                    .font(.caption).foregroundStyle(.secondary)
+                if paused {
+                    Text((session.pausedUntil ?? session.endsAt) < session.endsAt
+                         ? "Blocking resumes automatically." : "This session ends with the pause.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }
-            HStack {
+
+            VStack(spacing: 12) {
                 if paused {
-                    Button("Resume Now", systemImage: "play.fill") { model.resume(session) }
-                } else {
-                    Button("Pause \(session.options.pause.minutes) min", systemImage: "pause.fill") { model.pause(session) }
-                        .disabled(session.pausesRemaining == 0)
-                        .help("\(session.pausesRemaining) pauses remaining")
+                    Button { model.resume(session) } label: {
+                        Label("Resume Focus", systemImage: "play.fill").frame(maxWidth: .infinity)
+                    }.buttonStyle(.borderedProminent).controlSize(.large)
+                } else if session.pausesRemaining > 0 {
+                    Button { model.pause(session) } label: {
+                        Label("Pause for \(session.options.pause.minutes) min", systemImage: "pause.fill")
+                            .frame(maxWidth: .infinity)
+                    }.buttonStyle(.bordered).controlSize(.large)
                 }
-                if session.options.pause.allowance > 0 {
-                    Text("\(session.pausesRemaining) left").font(.caption).foregroundStyle(.secondary)
+                HStack {
+                    Text(session.pausesRemaining == 0 ? "No pauses left" : "\(session.pausesRemaining) \(session.pausesRemaining == 1 ? "pause" : "pauses") left")
+                        .font(.caption).foregroundStyle(.secondary)
+                    Spacer()
+                    if session.options.mode == .flexible {
+                        Button("End Session") { confirmEnd = true }
+                            .buttonStyle(.borderless).font(.caption)
+                    }
                 }
-                Spacer()
-                if session.options.mode == .flexible {
-                    Button("End", role: .destructive) { confirmEnd = true }
-                } else {
-                    Image(systemName: "lock.fill").foregroundStyle(.secondary).accessibilityLabel("Locked until the end")
-                }
-            }.controlSize(.small)
+            }
         }
-        .padding(compact ? 14 : 20)
-        .modifier(PanelStyle())
+        .padding(compact ? 4 : 20)
+        .accessibilityElement(children: .contain)
         .confirmationDialog("End this session?", isPresented: $confirmEnd, titleVisibility: .visible) {
             Button("End Session", role: .destructive) { model.stop(session) }
         } message: {

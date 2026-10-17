@@ -1,40 +1,22 @@
-# Zone
+![Zone — Make room for focus. A small, native macOS app for fewer distractions.](docs/images/banner.svg)
 
-A small, native macOS menu-bar app that helps you stay focused. Block distracting websites and apps for a few minutes, or put focus time on a schedule.
+Zone lives in your menu bar and blocks distracting websites and apps while you focus. Start a session now or make it part of your weekly routine.
 
-Built with SwiftUI and AppKit. Everything stays on your Mac. No account, subscription, analytics, or third-party runtime dependencies.
+**[Download for macOS](https://github.com/morajabi/zone/releases/latest)** · [Build from source](#build-it-yourself) · [Report an issue](https://github.com/morajabi/zone/issues)
 
-![Zone’s Focus window](docs/images/focus.png)
+macOS 15 or later · Apple silicon and Intel · Free and open source
 
-## Features
+No account, subscription, analytics, or third-party runtime dependencies. Everything stays on your Mac.
 
-- **Quick sessions:** pick a duration or use a 25, 45, 60, or 90-minute preset.
-- **Schedules:** repeat on selected weekdays, including overnight sessions, or plan a session just once.
-- **Block lists:** group websites and apps for different kinds of work. Domains include their subdomains.
-- **Flexible or locked:** end a flexible session early, or commit until a locked session ends.
-- **Configurable pauses:** choose the length and number of pauses before starting. Pauses resume automatically and do not extend the session.
-- **Menu-bar controls:** see time remaining, pause, resume, or start another session without opening the main window.
-- **Local persistence:** sessions survive app restarts, reconcile after sleep, and can start automatically with Open at Login.
+## Made for your routine
 
-Running sessions keep a snapshot of their rules and pause settings. Overlapping sessions combine their blocks; pausing one leaves the others in effect.
+- **One clear start.** Set the time, choose a block list, and focus.
+- **Your schedule.** Repeat on selected weekdays, including overnight, or plan a session just once.
+- **Your commitment.** End a flexible session early or lock it until the timer ends.
+- **Room for a break.** Choose how many pauses you get and how long they last. Blocking resumes automatically; pauses never extend the session.
+- **Always close by.** See the countdown, pause, or resume from the menu bar. Sessions survive restarts and reconcile after sleep.
 
-## Build and run
-
-Requires macOS 15 or later, Xcode 26 or later (Swift 6.2+), and [XcodeGen](https://github.com/yonaskolb/XcodeGen).
-
-```sh
-git clone https://github.com/morajabi/zone.git
-cd zone
-brew install xcodegen
-./scripts/build.sh
-open build/Build/Products/Debug/Zone.app
-```
-
-The local build supports browser control and app blocking **without a paid Apple Developer account**. It uses ad-hoc signing; rebuilding may require granting Automation permission again.
-
-Build scripts default to two concurrent Xcode jobs. Set `ZONE_BUILD_JOBS=1` to reduce concurrency further, or raise it on a dedicated build machine.
-
-To edit in Xcode, run `xcodegen generate` and open `Zone.xcodeproj`. The generated project is ignored; edit `project.yml` for project changes.
+Running sessions keep their original rules. Overlapping sessions combine their blocks; pausing one leaves the others running.
 
 ## Start focusing
 
@@ -57,6 +39,24 @@ The check is periodic, so a page may appear briefly before redirection. Zone mus
 
 An **optional network filter** is available for advanced builds. It needs Apple provisioning and macOS approval, and its traffic coverage is still experimental. See [network-filter setup and limitations](docs/network-filter.md). Browser control is the simpler supported path.
 
+## Build it yourself
+
+Requires macOS 15 or later, Xcode 26 or later (Swift 6.2+), and [XcodeGen](https://github.com/yonaskolb/XcodeGen).
+
+```sh
+git clone https://github.com/morajabi/zone.git
+cd zone
+brew install xcodegen
+./scripts/build.sh
+open build/Build/Products/Debug/Zone.app
+```
+
+The local build supports browser control and app blocking **without a paid Apple Developer account**. It uses ad-hoc signing; rebuilding may require granting Automation permission again.
+
+Build scripts default to two concurrent Xcode jobs. Set `ZONE_BUILD_JOBS=1` to reduce concurrency further, or raise it on a dedicated build machine.
+
+To edit in Xcode, run `xcodegen generate` and open `Zone.xcodeproj`. The generated project is ignored; edit `project.yml` for project changes.
+
 ## Development
 
 ```sh
@@ -73,7 +73,9 @@ Signing is configurable through `Config/Base.xcconfig`. Copy `Config/Signing.xcc
 
 Data is stored in `~/Library/Application Support/Zone/sessions.json`, written atomically with owner-only permissions. Unreadable data is preserved instead of silently replaced.
 
-See [contributing](CONTRIBUTING.md) and [tested behavior and remaining gaps](docs/acceptance.md).
+See [contributing](CONTRIBUTING.md), [release and signing instructions](docs/releasing.md), and [tested behavior and remaining gaps](docs/acceptance.md).
+
+The UI was refined through [24 interactive HTML studies](docs/design/spikes/index.html). Read the [design decision](docs/design/decision.md), or open the gallery locally to compare them.
 
 ## License
 

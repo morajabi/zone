@@ -1,0 +1,82 @@
+[
+  {
+    "id": "menu-01",
+    "title": "Quiet duration",
+    "file": "01-quiet-duration.html",
+    "rationale": "A large editable duration and one Start action. A single summary row opens mode and pause settings; list management stays outside the session task.",
+    "visibleActionCount": 5,
+    "strength": "Lowest everyday cognitive load without concealing the chosen rules.",
+    "tradeoff": "Duration presets are deliberately absent; changing time uses the numeric field.",
+    "rank": 1
+  },
+  {
+    "id": "menu-02",
+    "title": "Native menu",
+    "file": "02-native-menu.html",
+    "rationale": "Uses the familiar checkmark menu model. Choosing a duration is a radio-like row, with one explicit Start command below the group.",
+    "visibleActionCount": 8,
+    "strength": "Compact, keyboard-friendly hierarchy and almost no outlined button chrome.",
+    "tradeoff": "The whole surface feels like a command menu; long-running status has less breathing room.",
+    "rank": 4
+  },
+  {
+    "id": "menu-03",
+    "title": "Timer dial",
+    "file": "03-timer-dial.html",
+    "rationale": "The timer is the main object in both setup and active states. A slider changes duration; a quiet ring previews the same geometry used for countdown.",
+    "visibleActionCount": 5,
+    "strength": "Setup and running states feel like the same object, with very little visual switching.",
+    "tradeoff": "The ring consumes space and exact unusual durations require Options.",
+    "rank": 3
+  },
+  {
+    "id": "menu-04",
+    "title": "A simple sentence",
+    "file": "04-simple-sentence.html",
+    "rationale": "Presents intent as a readable sentence: Focus for 25 minutes, blocking Distractions. Only the values are editable.",
+    "visibleActionCount": 5,
+    "strength": "The relationship between time, rules and commitment is immediately legible.",
+    "tradeoff": "Sentence wrapping is sensitive to longer translated names and larger type.",
+    "rank": 5
+  },
+  {
+    "id": "menu-05",
+    "title": "Duration inspector",
+    "file": "05-duration-inspector.html",
+    "rationale": "Treats the last-used session as a ready-to-run object. Duration, block list and policy are one inspection row, with editing revealed only on demand.",
+    "visibleActionCount": 3,
+    "strength": "Very calm for repeat sessions; a user can start without reconsidering every setting.",
+    "tradeoff": "Changing a duration costs one extra click and the summary needs disciplined copy.",
+    "rank": 2
+  },
+  {
+    "id": "menu-06",
+    "title": "Until later",
+    "file": "06-until-later.html",
+    "rationale": "Uses an end time as the central decision and a short time band as its direct manipulation control. Session details are secondary.",
+    "visibleActionCount": 5,
+    "strength": "Fits work that naturally ends at the next meeting or break.",
+    "tradeoff": "End-time reasoning can be less intuitive than a familiar 25-minute session.",
+    "rank": 6
+  },
+  {
+    "id": "menu-07",
+    "title": "Two decisions",
+    "file": "07-two-decisions.html",
+    "rationale": "A small guided sequence separates choosing time from reviewing commitment. Once configured, the active panel stays sparse.",
+    "visibleActionCount": 3,
+    "strength": "Clear first-use flow with focused decisions and a review before locking.",
+    "tradeoff": "Repeated sessions take more steps than a direct start; best only for onboarding.",
+    "rank": 8
+  },
+  {
+    "id": "menu-08",
+    "title": "Remembered rhythm",
+    "file": "08-remembered-rhythm.html",
+    "rationale": "Two named, editable session recipes replace a full setup form. Selecting a recipe sets duration and policy; one Start action runs it.",
+    "visibleActionCount": 6,
+    "strength": "Fast when someone repeats two distinct routines, such as a short reset and deep work.",
+    "tradeoff": "Introduces a new recipe concept and will feel excessive for people who use one configuration.",
+    "rank": 7
+  }
+]

@@ -36,7 +36,7 @@ struct MenuBarView: View {
             HStack {
                 Text("Zone").font(.headline)
                 Spacer()
-                Text(model.activeSessions.isEmpty ? "Ready to focus" : "\(model.activeSessions.count) active")
+                Text(model.activeSessions.isEmpty ? "Ready" : "\(model.activeSessions.count) active")
                     .font(.caption).foregroundStyle(.secondary)
             }.padding(16)
             Divider()
@@ -59,12 +59,16 @@ struct MenuBarView: View {
             HStack(spacing: 16) {
                 Button("Open Zone") { openWindow(id: "main"); NSApp.activate() }
                 Spacer()
-                Button("Settings", systemImage: "gearshape") { openSettings(); NSApp.activate() }
-                    .labelStyle(.iconOnly).help("Settings")
-                Button("Quit Zone", systemImage: "power") { model.quit() }
-                    .labelStyle(.iconOnly).disabled(model.hasLockedSession).help("Quit Zone")
+                Menu {
+                    Button("Settings…") { openSettings(); NSApp.activate() }
+                    Divider()
+                    Button("Quit Zone") { model.quit() }.disabled(model.hasLockedSession)
+                } label: {
+                    Image(systemName: "ellipsis")
+                }.menuStyle(.borderlessButton).frame(width: 24)
+                    .accessibilityLabel("More options").help("Settings and Quit")
             }.buttonStyle(.borderless).padding(14)
-        }.frame(width: 350)
+        }.frame(width: 330)
         .modifier(ErrorPresenter(model: model))
     }
 }

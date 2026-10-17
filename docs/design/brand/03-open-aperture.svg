@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none" role="img" aria-labelledby="title">
+  <title id="title">Open aperture</title>
+  <style>.ring{stroke:#263b38}.point{fill:#297c69}@media(prefers-color-scheme:dark){.ring{stroke:#e7eeeb}.point{fill:#8bd4bc}}</style>
+  <path class="ring" d="M21 14C9 21 9 43 21 50M43 14C55 21 55 43 43 50" stroke-width="6" stroke-linecap="round"/>
+  <circle class="point" cx="32" cy="32" r="4"/>
+</svg>

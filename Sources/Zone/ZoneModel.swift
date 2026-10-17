@@ -66,7 +66,7 @@ final class ZoneModel {
         quickMinutes = document.defaultMinutes
         quickOptions = document.defaultOptions
         let previousList = UserDefaults.standard.string(forKey: "selectedListID").flatMap(UUID.init(uuidString:))
-        selectedListID = document.blockLists.first(where: { $0.id == previousList })?.id
+        selectedListID = document.blockLists.first(where: { $0.id == previousList && !$0.isEmpty })?.id
             ?? document.blockLists.first(where: { !$0.isEmpty })?.id ?? document.blockLists.first?.id
         launchAtLogin = SMAppService.mainApp.status == .enabled
         blocker.onBlocked = { [weak self] name in self?.lastBlockedApp = name; self?.appBlockFailure = nil }
@@ -198,7 +198,10 @@ final class ZoneModel {
         var next = document
         if let index = next.blockLists.firstIndex(where: { $0.id == list.id }) { next.blockLists[index] = list }
         else { next.blockLists.append(list) }
-        if commit(next) { selectedListID = list.id; return true }
+        if commit(next) {
+            selectedListID = list.isEmpty ? availableLists.first?.id : list.id
+            return true
+        }
         return false
     }
 
@@ -209,7 +212,7 @@ final class ZoneModel {
         }
         var next = document
         next.blockLists.removeAll { $0.id == list.id }
-        if commit(next), selectedListID == list.id { selectedListID = next.blockLists.first?.id }
+        if commit(next), selectedListID == list.id { selectedListID = availableLists.first?.id }
     }
 
     func saveSchedule(_ schedule: FocusSchedule) -> Bool {
