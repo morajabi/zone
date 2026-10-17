@@ -7,7 +7,7 @@ struct FocusView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 28) {
+            VStack(spacing: 20) {
                 BlockingNotice(model: model)
                 ForEach(model.activeSessions) { session in
                     SessionCard(session: session, model: model)
@@ -21,16 +21,16 @@ struct FocusView: View {
                         .frame(maxWidth: .infinity).padding(.vertical, 50)
                 } else {
                     if model.activeSessions.isEmpty {
-                        QuickSessionEditor(model: model).padding(.top, 16)
+                        QuickSessionEditor(model: model).padding(.top, 8)
                     } else {
                         DisclosureGroup("Start Another Session", isExpanded: $showNewSession) {
-                            QuickSessionEditor(model: model).padding(.top, 16)
+                            QuickSessionEditor(model: model).padding(.top, 8)
                         }
                     }
                     UpcomingSessionView(model: model)
                 }
             }
-            .padding(32).frame(maxWidth: 460).frame(maxWidth: .infinity)
+            .padding(24).frame(maxWidth: 440).frame(maxWidth: .infinity)
         }
         .navigationTitle("Focus")
         .safeAreaInset(edge: .bottom) {
@@ -69,25 +69,25 @@ struct QuickSessionEditor: View {
     @State private var confirmStart = false
 
     var body: some View {
-        VStack(spacing: compact ? 20 : 24) {
+        VStack(spacing: 18) {
             if model.availableLists.isEmpty {
                 FirstListPrompt(model: model, compact: compact).padding(.vertical, 12)
             } else {
                 VStack(spacing: 0) {
                     TextField("25", text: $model.quickMinutesText)
-                        .font(.system(size: compact ? 68 : 88, weight: .thin, design: .rounded))
+                        .font(.system(size: compact ? 68 : 80, weight: .thin, design: .rounded))
                         .monospacedDigit().multilineTextAlignment(.center).textFieldStyle(.plain)
                         .frame(width: compact ? 220 : 270)
                         .accessibilityLabel("Session duration in minutes")
                         .help("Enter a duration from 1 to 1,440 minutes")
                     Text("minutes of focus").font(.callout).foregroundStyle(.secondary)
-                }.frame(maxWidth: .infinity).padding(.vertical, compact ? 8 : 12)
+                }.frame(maxWidth: .infinity).padding(.vertical, 4)
 
                 if !(1...1440).contains(model.quickMinutes) {
                     Text("Enter 1–1,440 minutes.").font(.caption).foregroundStyle(.red)
                 }
 
-                VStack(alignment: .leading, spacing: 14) {
+                VStack(alignment: .leading, spacing: 10) {
                     HStack {
                         Text("Block").foregroundStyle(.secondary)
                         Spacer()
@@ -137,7 +137,7 @@ private struct UpcomingSessionView: View {
     let model: ZoneModel
     var body: some View {
         if let next = model.nextScheduledSession {
-            VStack(spacing: 20) {
+            VStack(spacing: 16) {
                 Divider()
                 Button { model.page = .schedules } label: {
                     HStack(spacing: 12) {

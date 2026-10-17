@@ -171,7 +171,7 @@ app, extension, temporary = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2])
 authorized = json.loads((temporary / "profile-certificates.json").read_text())
 for kind, bundle in (("app", app), ("filter", extension)):
     prefix = str(temporary / f"{kind}-certificate-")
-    subprocess.run(["codesign", "--display", "--extract-certificates", prefix, str(bundle)], check=True)
+    subprocess.run(["codesign", "--display", f"--extract-certificates={prefix}", str(bundle)], check=True)
     certificate = pathlib.Path(prefix + "0").read_bytes()
     if hashlib.sha256(certificate).hexdigest() not in authorized[kind]:
         raise SystemExit(f"The signing certificate is not authorized by the {kind} provisioning profile.")
