@@ -11,7 +11,7 @@ struct SettingsView: View {
                 .tabItem { Label("General", systemImage: "gearshape") }.tag(ZoneModel.SettingsPane.general)
             Form {
                 Section {
-                    Picker("Block websites using", selection: Binding(get: { model.websiteMode }, set: model.setWebsiteMode)) {
+                    Picker("Block websites using", selection: Binding(get: { model.websiteMode }, set: { model.setWebsiteMode($0) })) {
                         ForEach(ZoneModel.WebsiteMode.allCases) { mode in Text(mode.rawValue).tag(mode) }
                     }.disabled(model.hasWebsiteSession || model.changingWebsiteMode)
                     if model.hasWebsiteSession {
