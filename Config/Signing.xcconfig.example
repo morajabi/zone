@@ -1,0 +1,15 @@
+// Copy to Signing.xcconfig (gitignored). Never commit your local signing config.
+// Use a paid Apple Developer team to activate the network extension.
+DEVELOPMENT_TEAM = YOURTEAMID
+
+// Pick a reverse-DNS identifier available to your team. The extension, app group,
+// Mach service, and mutual XPC signature checks derive from this value.
+ZONE_BUNDLE_ID = com.yourname.Zone
+
+// Direct-distribution network system extensions need Developer ID profiles with
+// content-filter-provider-systemextension. Ordinary Mac development profiles may
+// contain only content-filter-provider and fail entitlement validation.
+CODE_SIGN_STYLE = Manual
+CODE_SIGN_IDENTITY = Developer ID Application
+ZONE_APP_PROFILE = Your Zone Developer ID profile name
+ZONE_FILTER_PROFILE = Your Zone Filter Developer ID profile name

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>Zone Website Filter</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>SYSX</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>NSSystemExtensionUsageDescription</key>
+	<string>Blocks distracting websites during Zone sessions.</string>
+	<key>NetworkExtension</key>
+	<dict>
+		<key>NEMachServiceName</key>
+		<string>$(ZONE_MACH_SERVICE)</string>
+		<key>NEProviderClasses</key>
+		<dict>
+			<key>com.apple.networkextension.filter-data</key>
+			<string>$(PRODUCT_MODULE_NAME).FilterDataProvider</string>
+		</dict>
+	</dict>
+	<key>ZoneAppBundleIdentifier</key>
+	<string>$(ZONE_BUNDLE_ID)</string>
+	<key>ZoneFilterBundleIdentifier</key>
+	<string>$(ZONE_FILTER_BUNDLE_ID)</string>
+	<key>ZoneMachService</key>
+	<string>$(ZONE_MACH_SERVICE)</string>
+	<key>ZoneTeamIdentifier</key>
+	<string>$(DEVELOPMENT_TEAM)</string>
+</dict>
+</plist>

@@ -1,0 +1,9 @@
+// Public defaults. Each developer supplies Config/Signing.xcconfig locally.
+ZONE_BUNDLE_ID = dev.example.Zone
+ZONE_FILTER_BUNDLE_ID = $(ZONE_BUNDLE_ID).filter
+ZONE_APP_GROUP = $(TeamIdentifierPrefix)$(ZONE_BUNDLE_ID)
+ZONE_MACH_SERVICE = $(ZONE_APP_GROUP).filter
+CODE_SIGN_STYLE = Automatic
+
+// Optional so anyone can build the UI without an Apple Developer account.
+#include? "Signing.xcconfig"

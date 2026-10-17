@@ -1,0 +1,100 @@
+name: Zone
+options:
+  bundleIdPrefix: dev.example
+  deploymentTarget:
+    macOS: "15.0"
+  xcodeVersion: "26.0"
+packages:
+  ZoneCore:
+    path: .
+configFiles:
+  Debug: Config/Base.xcconfig
+  Release: Config/Base.xcconfig
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "15.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: 10
+    ENABLE_HARDENED_RUNTIME: YES
+    SWIFT_STRICT_CONCURRENCY: complete
+  configs:
+    Release:
+      CODE_SIGN_INJECT_BASE_ENTITLEMENTS: NO
+      OTHER_CODE_SIGN_FLAGS: --timestamp
+targets:
+  Zone:
+    type: application
+    platform: macOS
+    sources:
+      - Sources/Zone
+      - Shared
+      - Resources/Zone.icns
+      - Resources/Blocked.html
+    dependencies:
+      - package: ZoneCore
+      - target: ZoneFilter
+        embed: true
+        codeSign: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(ZONE_BUNDLE_ID)
+        CODE_SIGN_ENTITLEMENTS: Resources/Zone.entitlements
+        INFOPLIST_FILE: Resources/Zone-Info.plist
+        COMBINE_HIDPI_IMAGES: YES
+        PROVISIONING_PROFILE_SPECIFIER: $(ZONE_APP_PROFILE)
+    info:
+      path: Resources/Zone-Info.plist
+      properties:
+        CFBundleDisplayName: Zone
+        CFBundlePackageType: APPL
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleIconFile: Zone
+        LSUIElement: true
+        LSMinimumSystemVersion: "15.0"
+        NSHumanReadableCopyright: "Copyright © 2026 Mo Rajabi. MIT License."
+        NSPrincipalClass: NSApplication
+        NSAppleEventsUsageDescription: Zone reads tab addresses and redirects blocked websites during your focus sessions. Browsing history is never saved or uploaded.
+        ZoneTeamIdentifier: $(DEVELOPMENT_TEAM)
+        ZoneAppBundleIdentifier: $(ZONE_BUNDLE_ID)
+        ZoneFilterBundleIdentifier: $(ZONE_FILTER_BUNDLE_ID)
+        ZoneMachService: $(ZONE_MACH_SERVICE)
+        NSSystemExtensionUsageDescription: Zone uses a network filter to block distracting websites during your focus sessions.
+  ZoneFilter:
+    type: system-extension
+    platform: macOS
+    sources:
+      - Sources/ZoneFilter
+      - Shared
+    dependencies:
+      - package: ZoneCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(ZONE_FILTER_BUNDLE_ID)
+        PRODUCT_NAME: $(ZONE_FILTER_BUNDLE_ID)
+        CODE_SIGN_ENTITLEMENTS: Resources/ZoneFilter.entitlements
+        INFOPLIST_FILE: Resources/ZoneFilter-Info.plist
+        SKIP_INSTALL: YES
+        PROVISIONING_PROFILE_SPECIFIER: $(ZONE_FILTER_PROFILE)
+    info:
+      path: Resources/ZoneFilter-Info.plist
+      properties:
+        CFBundleDisplayName: Zone Website Filter
+        CFBundlePackageType: SYSX
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSSystemExtensionUsageDescription: Blocks distracting websites during Zone sessions.
+        ZoneTeamIdentifier: $(DEVELOPMENT_TEAM)
+        ZoneAppBundleIdentifier: $(ZONE_BUNDLE_ID)
+        ZoneFilterBundleIdentifier: $(ZONE_FILTER_BUNDLE_ID)
+        ZoneMachService: $(ZONE_MACH_SERVICE)
+        NetworkExtension:
+          NEMachServiceName: $(ZONE_MACH_SERVICE)
+          NEProviderClasses:
+            com.apple.networkextension.filter-data: $(PRODUCT_MODULE_NAME).FilterDataProvider
+schemes:
+  Zone:
+    build:
+      targets:
+        Zone: all
