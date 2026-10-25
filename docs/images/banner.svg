@@ -1,25 +1,29 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="400" viewBox="0 0 1280 400" fill="none" role="img" aria-labelledby="title desc">
   <title id="title">Zone — Make room for focus.</title>
-  <desc id="desc">A small, native macOS app for fewer distractions. A calm green open-ring mark sits beside the Zone wordmark.</desc>
+  <desc id="desc">A small, native macOS app for fewer distractions. A warm sun inside an open ring, on a dawn sky, sits beside the Zone wordmark.</desc>
   <defs>
-    <linearGradient id="tile" x1="512" y1="64" x2="512" y2="960" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#294940"/><stop offset="1" stop-color="#162f2a"/>
+    <linearGradient id="sky" x1="512" y1="100" x2="512" y2="924" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8f9dfb"/><stop offset=".38" stop-color="#d9a4d6"/><stop offset=".72" stop-color="#ffb8a1"/><stop offset="1" stop-color="#ffd59a"/>
     </linearGradient>
-    <linearGradient id="ring" x1="512" y1="224" x2="512" y2="800" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#edf7ef"/><stop offset="1" stop-color="#c5e3d5"/>
-    </linearGradient>
+    <radialGradient id="glow" cx="512" cy="540" r="360" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff1d6" stop-opacity=".7"/><stop offset="1" stop-color="#fff1d6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="sun" cx="482" cy="500" r="150" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fffdf6"/><stop offset=".55" stop-color="#ffdd94"/><stop offset="1" stop-color="#ffb766"/>
+    </radialGradient>
+    <clipPath id="tile"><rect x="100" y="100" width="824" height="824" rx="186"/></clipPath>
   </defs>
   <style>
-    .surface { fill:#f3f6f0; stroke:#dce5da }
-    .title { fill:#263b38 }
-    .secondary { fill:#68766d }
-    .rule { stroke:#d4dfd1 }
+    .surface { fill:#fff8f2; stroke:#f1e2d6 }
+    .title { fill:#36304f }
+    .secondary { fill:#7a7088 }
+    .rule { stroke:#eedccf }
     text { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif }
     @media (prefers-color-scheme: dark) {
-      .surface { fill:#1b2722; stroke:#33463b }
-      .title { fill:#e7eeeb }
-      .secondary { fill:#abbdb0 }
-      .rule { stroke:#3c5144 }
+      .surface { fill:#1e1b2b; stroke:#3a3450 }
+      .title { fill:#f3eefc }
+      .secondary { fill:#b9aecb }
+      .rule { stroke:#433b5b }
     }
   </style>
   <rect class="surface" x=".5" y=".5" width="1279" height="399" rx="24"/>
@@ -28,10 +32,13 @@
   <text class="secondary" x="72" y="231" font-size="23">A small, native app for fewer distractions.</text>
   <path class="rule" d="M72 278H630"/>
   <text class="secondary" x="72" y="317" font-size="16">Your time. Your rules. On your Mac.</text>
-  <g transform="translate(882 72) scale(.25)">
-    <rect x="64" y="64" width="896" height="896" rx="200" fill="url(#tile)"/>
-    <rect x="64.5" y="64.5" width="895" height="895" rx="199.5" stroke="#fff" stroke-opacity=".13"/>
-    <path d="M747.862849 426.152944A251 251 0 1 1 597.847056 276.137152" stroke="url(#ring)" stroke-width="64" stroke-linecap="round"/>
-    <circle cx="512" cy="512" r="48" fill="#9bddc0"/>
+  <g transform="translate(870 60) scale(.27)">
+    <g clip-path="url(#tile)">
+      <rect x="100" y="100" width="824" height="824" fill="url(#sky)"/>
+      <circle cx="512" cy="540" r="360" fill="url(#glow)"/>
+      <path d="M726.2499 462.0194A228 228 0 1 1 589.9806 325.7501" stroke="#fff" stroke-opacity=".92" stroke-width="40" stroke-linecap="round"/>
+      <circle cx="512" cy="540" r="314" stroke="#fff" stroke-opacity=".24" stroke-width="12"/>
+      <circle cx="512" cy="540" r="118" fill="url(#sun)"/>
+    </g>
   </g>
 </svg>

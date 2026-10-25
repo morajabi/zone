@@ -90,13 +90,30 @@ struct SessionTests {
         #expect(SessionEngine.activeInterval(for: schedule, at: date(2026, 10, 21, 1), calendar: calendar) == nil)
     }
 
+    @Test func scheduledSessionsCannotEndEarly() throws {
+        let now = date()
+        let schedule = FocusSchedule(blockListID: list.id, weekdays: [2], startMinute: 9 * 60, endMinute: 11 * 60,
+                                     options: .init(mode: .flexible, pause: .init(minutes: 5, allowance: 1)))
+        var document = ZoneDocument(blockLists: [list], schedules: [schedule])
+        SessionEngine.materialize(&document, at: now, calendar: calendar)
+        #expect(document.sessions[0].isStrict)
+        #expect(throws: ZoneError.lockedSession) { try SessionEngine.stop(&document.sessions[0], at: now) }
+        try SessionEngine.pause(&document.sessions[0], at: now)
+        #expect(document.sessions[0].isPaused(at: now.addingTimeInterval(60)))
+        #expect(throws: ZoneError.lockedSession) { try SessionEngine.stop(&document.sessions[0], at: now.addingTimeInterval(60)) }
+        var oneOff = try SessionEngine.start(list: list, minutes: 25, options: .init(), at: now)
+        #expect(!oneOff.isStrict)
+        try SessionEngine.stop(&oneOff, at: now)
+    }
+
     @Test func stoppedRecurringOccurrenceDoesNotRestart() throws {
         let now = date()
         let schedule = FocusSchedule(blockListID: list.id, weekdays: [2], startMinute: 9 * 60, endMinute: 11 * 60)
         var document = ZoneDocument(blockLists: [list], schedules: [schedule])
         SessionEngine.materialize(&document, at: now, calendar: calendar)
         #expect(document.sessions.count == 1)
-        try SessionEngine.stop(&document.sessions[0], at: now)
+        // Earlier versions allowed ending flexible scheduled sessions; their saved state still holds.
+        document.sessions[0].stoppedAt = now
         SessionEngine.materialize(&document, at: now.addingTimeInterval(60), calendar: calendar)
         #expect(document.sessions.count == 1)
         #expect(SessionEngine.activeSessions(in: document, at: now, calendar: calendar).isEmpty)

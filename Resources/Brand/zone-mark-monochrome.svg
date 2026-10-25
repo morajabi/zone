@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none" role="img" aria-labelledby="title">
   <title id="title">Zone</title>
   <path d="M50.794 25.16A20 20 0 1 1 38.84 13.206" stroke="#000" stroke-width="6" stroke-linecap="round"/>
-  <circle cx="32" cy="32" r="4" fill="#000"/>
+  <circle cx="32" cy="32" r="7" fill="#000"/>
 </svg>

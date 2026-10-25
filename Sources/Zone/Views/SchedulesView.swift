@@ -51,7 +51,7 @@ struct SchedulesView: View {
         .confirmationDialog("This session will start now", isPresented: Binding(get: { enabling != nil }, set: { if !$0 { enabling = nil } }), titleVisibility: .visible) {
             Button("Enable and Start") { if let enabling { _ = model.saveSchedule(enabling) }; enabling = nil }
         } message: {
-            Text("The current time falls inside this schedule. Selected apps will close. Locked sessions cannot be ended early.")
+            Text("The current time falls inside this schedule. Selected apps will close. Scheduled sessions can’t be ended early.")
         }
     }
 }
@@ -62,9 +62,10 @@ private struct ScheduleRow: View {
     let setEnabled: @MainActor @Sendable (Bool) -> Void
     let delete: () -> Void
 
+    private var running: Bool { model.isRunning(schedule) }
     private var status: String {
+        if running { return "Running" }
         if !schedule.isEnabled { return "Off" }
-        if model.activeSessions.contains(where: { $0.scheduleID == schedule.id }) { return "Running" }
         if schedule.kind == .once && schedule.onceEnd <= model.now { return "Completed" }
         return "On"
     }
@@ -83,7 +84,7 @@ private struct ScheduleRow: View {
                                 Text(list.name)
                                 Text("·")
                             }
-                            Label(schedule.options.mode.title, systemImage: schedule.options.mode == .locked ? "lock" : "circle.dotted")
+                            Text(pauses)
                         }.font(.caption).foregroundStyle(.secondary)
                     }
                     Spacer(minLength: 12)
@@ -95,14 +96,16 @@ private struct ScheduleRow: View {
             .accessibilityLabel("Edit \(schedule.name)")
             .accessibilityValue(summary)
             .contextMenu {
-                Button("Delete", role: .destructive) { delete() }
+                Button("Delete", role: .destructive) { delete() }.disabled(running)
             }
             // A closure avoids a Swift 6.2 IRGen crash converting the isolated callback directly.
-            Toggle(status, isOn: Binding(get: { schedule.isEnabled }, set: { enabled in setEnabled(enabled) }))
+            Toggle(status, isOn: Binding(get: { schedule.isEnabled || running }, set: { enabled in setEnabled(enabled) }))
                 .toggleStyle(.switch).controlSize(.small).fixedSize()
+                .disabled(running)
+                .help(running ? "Scheduled sessions stay on until they end." : "")
                 .accessibilityLabel("Enable \(schedule.name)")
             Menu {
-                Button("Delete", role: .destructive) { delete() }
+                Button("Delete", role: .destructive) { delete() }.disabled(running)
             } label: {
                 Image(systemName: "ellipsis")
             }
@@ -112,27 +115,14 @@ private struct ScheduleRow: View {
     }
 
     private var summary: String {
-        if schedule.kind == .once {
-            let sameDay = Calendar.autoupdatingCurrent.isDate(schedule.onceStart, inSameDayAs: schedule.onceEnd)
-            return schedule.onceStart.formatted(date: .abbreviated, time: .shortened) + " – "
-                + schedule.onceEnd.formatted(date: sameDay ? .omitted : .abbreviated, time: .shortened)
-        }
-        let calendar = Calendar.autoupdatingCurrent
-        let days = schedule.weekdays.count == 7 ? "Every day" : orderedWeekdays.filter { schedule.weekdays.contains($0) }
-            .map { calendar.shortWeekdaySymbols[$0 - 1] }.joined(separator: ", ")
-        return "\(days) · \(time(schedule.startMinute)) – \(time(schedule.endMinute))"
-            + (schedule.endMinute < schedule.startMinute ? " (next day)" : "")
+        ScheduleFormat.summary(schedule)
+            + (schedule.kind == .weekly && schedule.endMinute < schedule.startMinute ? " (next day)" : "")
     }
 
-    private func time(_ minute: Int) -> String {
-        let date = Calendar.autoupdatingCurrent.date(bySettingHour: minute / 60, minute: minute % 60, second: 0, of: model.now) ?? model.now
-        return date.formatted(date: .omitted, time: .shortened)
+    private var pauses: String {
+        let pause = schedule.options.pause
+        return pause.allowance == 0 ? "No pauses" : "\(pause.allowance) \(pause.allowance == 1 ? "pause" : "pauses"), \(pause.minutes) min"
     }
-}
-
-private var orderedWeekdays: [Int] {
-    let first = Calendar.autoupdatingCurrent.firstWeekday
-    return (0..<7).map { (first - 1 + $0) % 7 + 1 }
 }
 
 struct ScheduleEditor: View {
@@ -147,7 +137,12 @@ struct ScheduleEditor: View {
         _schedule = State(initialValue: schedule)
     }
 
+    private var isRunning: Bool { model.isRunning(schedule) }
+
     private var validationMessage: String? {
+        if isRunning, let session = model.runningSession(for: schedule) {
+            return "This schedule is running. You can change it after it ends at \(session.endsAt.formatted(date: .omitted, time: .shortened))."
+        }
         if schedule.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return "Enter a name for this schedule." }
         if schedule.kind == .weekly {
             if schedule.weekdays.isEmpty { return "Choose at least one day." }
@@ -178,7 +173,7 @@ struct ScheduleEditor: View {
                 if schedule.kind == .weekly {
                     LabeledContent("Days") {
                         HStack(spacing: 4) {
-                            ForEach(orderedWeekdays, id: \.self) { day in
+                            ForEach(ScheduleFormat.orderedWeekdays, id: \.self) { day in
                                 Toggle(isOn: Binding(get: { schedule.weekdays.contains(day) }, set: { selected in
                                     if selected { schedule.weekdays.insert(day) } else { schedule.weekdays.remove(day) }
                                 })) {
@@ -198,9 +193,9 @@ struct ScheduleEditor: View {
                     DatePicker("Until", selection: $schedule.onceEnd, displayedComponents: [.date, .hourAndMinute])
                 }
                 Toggle("Enabled", isOn: $schedule.isEnabled)
-            }.formStyle(.columns)
+            }.formStyle(.columns).disabled(isRunning)
             Divider()
-            ScheduleOptionsDisclosure(options: $schedule.options)
+            ScheduleOptionsDisclosure(options: $schedule.options).disabled(isRunning)
             Text("Changes apply to future sessions. Scheduled app blocks may close unsaved work.")
                 .font(.caption).foregroundStyle(.secondary)
             if let message = validationMessage ?? saveError {
@@ -218,7 +213,7 @@ struct ScheduleEditor: View {
         }.padding(24).frame(width: 530)
             .confirmationDialog("This session will start now", isPresented: $confirmSave, titleVisibility: .visible) {
                 Button("Save and Start") { save() }
-            } message: { Text("The current time falls inside this schedule. Selected apps will close. A locked session cannot be ended early.") }
+            } message: { Text("The current time falls inside this schedule. Selected apps will close. Scheduled sessions can’t be ended early.") }
     }
 
     private func save() {
@@ -244,9 +239,9 @@ private struct ScheduleOptionsDisclosure: View {
 
     var body: some View {
         DisclosureGroup(isExpanded: $isExpanded) {
-            SessionOptionsEditor(options: $options).padding(.top, 12)
+            SessionOptionsEditor(options: $options, scheduled: true).padding(.top, 12)
         } label: {
-            Text(SessionOptionsSummary.text(for: options))
+            Text(SessionOptionsSummary.text(for: options, scheduled: true))
                 .font(.callout).foregroundStyle(.secondary)
         }
     }

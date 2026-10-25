@@ -6,15 +6,19 @@ Zone lives in your menu bar and blocks distracting websites and apps while you f
 
 macOS 15 or later · Apple silicon and Intel · Free and open source
 
+The download is Developer ID signed and notarized by Apple. Open the disk image and drag Zone to Applications.
+
 No account, subscription, analytics, or third-party runtime dependencies. Everything stays on your Mac.
+
+![Zone’s native Focus window, with one Start action and session options collapsed](docs/images/focus.png)
 
 ## Made for your routine
 
 - **One clear start.** Set the time, choose a block list, and focus.
 - **Your schedule.** Repeat on selected weekdays, including overnight, or plan a session just once.
-- **Your commitment.** End a flexible session early or lock it until the timer ends.
+- **Your commitment.** End a one-off flexible session early, or lock it until the timer ends. Scheduled sessions always stay on until they end.
 - **Room for a break.** Choose how many pauses you get and how long they last. Blocking resumes automatically; pauses never extend the session.
-- **Always close by.** See the countdown, pause, or resume from the menu bar. Sessions survive restarts and reconcile after sleep.
+- **Always close by.** The menu bar shows the countdown, a one-line start, and your schedules at a glance. Pause or resume there. Sessions survive restarts and reconcile after sleep.
 
 Running sessions keep their original rules. Overlapping sessions combine their blocks; pausing one leaves the others running.
 
@@ -35,9 +39,9 @@ The check is periodic, so a page may appear briefly before redirection. Zone mus
 
 **App blocking closes selected apps just after launch.** It asks them to quit, then force quits if needed, which can discard unsaved changes. It does not prevent macOS from launching the process.
 
-**Locked mode is a personal commitment.** Zone hides early-ending controls and prevents normal quitting until the session ends. It is not tamper-proof: force quitting Zone bypasses browser and app blocking.
+**Locked and scheduled sessions are a personal commitment.** Zone hides early-ending controls, keeps a running schedule from being edited, turned off, or deleted, and prevents normal quitting until the session ends. Logout, restart, and shutdown still proceed; the session resumes at next launch. It is not tamper-proof: force quitting Zone bypasses browser and app blocking.
 
-An **optional network filter** is available for advanced builds. It needs Apple provisioning and macOS approval, and its traffic coverage is still experimental. See [network-filter setup and limitations](docs/network-filter.md). Browser control is the simpler supported path.
+An **optional network filter** is included in the signed download. It needs macOS approval, and its traffic coverage is still experimental. Compiling that option yourself requires Apple provisioning. See [network-filter setup and limitations](docs/network-filter.md). Browser control is the simpler supported path.
 
 ## Build it yourself
 

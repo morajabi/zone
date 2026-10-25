@@ -1,14 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none" role="img" aria-labelledby="title desc">
   <title id="title">Zone</title>
-  <desc id="desc">An open circle surrounding a still point.</desc>
+  <desc id="desc">An open circle around a small warm sun.</desc>
   <style>
-    .ring { stroke: #263b38; }
-    .point { fill: #297c69; }
+    .ring { stroke: #4b4f86; }
+    .point { fill: #f39a4c; }
     @media (prefers-color-scheme: dark) {
-      .ring { stroke: #e7eeeb; }
-      .point { fill: #8bd4bc; }
+      .ring { stroke: #eef0ff; }
+      .point { fill: #ffc77a; }
     }
   </style>
   <path class="ring" d="M50.794 25.16A20 20 0 1 1 38.84 13.206" stroke-width="6" stroke-linecap="round"/>
-  <circle class="point" cx="32" cy="32" r="4"/>
+  <circle class="point" cx="32" cy="32" r="7"/>
 </svg>

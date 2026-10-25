@@ -169,7 +169,9 @@ private actor BrowserWorker {
                     let current = try get(urlProperty, target: target).stringValue
                     guard current == url, policy.blocks(url) else { continue }
                     operation = "Redirect tab"
-                    _ = try send("setd", object: urlProperty, target: target, value: NSAppleEventDescriptor(string: blockedPage))
+                    // The fragment stays in the browser; the local page uses it to name the site.
+                    let host = URLComponents(string: url)?.host.map { "#" + $0 } ?? ""
+                    _ = try send("setd", object: urlProperty, target: target, value: NSAppleEventDescriptor(string: blockedPage + host))
                 }
             }
             lastFailure[browser.id] = nil

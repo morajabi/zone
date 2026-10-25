@@ -97,7 +97,7 @@ public enum SessionEngine {
 
     public static func stop(_ session: inout FocusSession, at now: Date) throws {
         guard session.isActive(at: now) else { throw ZoneError.inactiveSession }
-        guard session.options.mode == .flexible else { throw ZoneError.lockedSession }
+        guard !session.isStrict else { throw ZoneError.lockedSession }
         session.stoppedAt = now
         session.pausedUntil = nil
     }

@@ -1,9 +1,164 @@
 <!doctype html>
-<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="color-scheme" content="light dark"><title>Take a moment · Zone</title>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>A calm moment · Zone</title>
 <style>
-:root{font-family:-apple-system,BlinkMacSystemFont,sans-serif;color-scheme:light dark}
-body{margin:0;min-height:100vh;display:grid;place-items:center;background:light-dark(#f5f7f6,#151c1b);color:light-dark(#263d37,#deebe7)}
-main{max-width:430px;padding:48px;text-align:center}.mark{font-size:48px;color:#319d86}h1{font-size:36px;letter-spacing:-1px;font-weight:600}p{font-size:17px;line-height:1.65;opacity:.75}small{display:block;margin-top:36px;opacity:.5}
+:root {
+  --ink: #36304f; --soft: #6f6684; --faint: #9b93ad;
+  --sky-1: #e9ecff; --sky-2: #fbe8f2; --sky-3: #fff0e2;
+  --blob-1: #b9c2ff; --blob-2: #ffc6d9; --blob-3: #ffd9a8;
+  --card: rgba(255, 255, 255, .58); --card-edge: rgba(255, 255, 255, .85);
+  --ring: rgba(255, 255, 255, .95); --halo: rgba(255, 214, 160, .55);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #f3eefc; --soft: #c4b9d6; --faint: #8f84a5;
+    --sky-1: #171630; --sky-2: #231b37; --sky-3: #2e2130;
+    --blob-1: #3d3f8f; --blob-2: #6b2f5c; --blob-3: #7a4a2a;
+    --card: rgba(255, 255, 255, .06); --card-edge: rgba(255, 255, 255, .12);
+    --ring: rgba(255, 255, 255, .8); --halo: rgba(255, 190, 120, .35);
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body {
+  min-height: 100vh; display: grid; place-items: center; overflow-x: hidden;
+  background: linear-gradient(170deg, var(--sky-1), var(--sky-2) 55%, var(--sky-3));
+}
+.blob { position: fixed; border-radius: 50%; filter: blur(80px); opacity: .55; pointer-events: none; z-index: 0; }
+.blob.one { width: 46vmax; height: 46vmax; background: var(--blob-1); top: -18vmax; left: -12vmax; animation: drift 38s ease-in-out infinite alternate; }
+.blob.two { width: 40vmax; height: 40vmax; background: var(--blob-2); bottom: -16vmax; right: -10vmax; animation: drift 44s ease-in-out infinite alternate-reverse; }
+.blob.three { width: 30vmax; height: 30vmax; background: var(--blob-3); bottom: 8vmax; left: 18vmax; animation: drift 52s ease-in-out infinite alternate; }
+@keyframes drift { to { transform: translate(6vmax, 4vmax) scale(1.08); } }
+
+main { position: relative; z-index: 1; width: min(560px, 100% - 32px); padding: 56px 0; text-align: center; }
+
+.breath { position: relative; width: 168px; height: 168px; margin: 0 auto 10px; }
+.breath .ring, .breath .sun, .breath .halo { position: absolute; inset: 0; margin: auto; border-radius: 50%; }
+.breath .halo { width: 168px; height: 168px; background: radial-gradient(circle, var(--halo), transparent 68%); animation: breathe 10s ease-in-out infinite; }
+.breath .ring { width: 124px; height: 124px; border: 5px solid var(--ring); border-top-color: transparent; transform: rotate(10deg); animation: turn 60s linear infinite; }
+.breath .sun {
+  width: 62px; height: 62px;
+  background: radial-gradient(circle at 40% 34%, #fffdf6, #ffdd94 55%, #ffb766);
+  box-shadow: 0 0 40px rgba(255, 200, 120, .7);
+  animation: breathe 10s ease-in-out infinite;
+}
+@keyframes breathe { 0%, 100% { transform: scale(.86); } 50% { transform: scale(1.12); } }
+@keyframes turn { to { transform: rotate(370deg); } }
+.cue { position: relative; height: 20px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); margin-bottom: 28px; }
+.cue span { position: absolute; inset: 0; animation: cue 10s ease-in-out infinite; }
+.cue span + span { animation-delay: -5s; }
+@keyframes cue { 0%, 45% { opacity: 1; } 50%, 95% { opacity: 0; } 100% { opacity: 1; } }
+
+h1 { margin: 0 0 12px; font-size: clamp(30px, 5vw, 40px); font-weight: 600; letter-spacing: -.02em; line-height: 1.15; }
+.lede { margin: 0 auto; max-width: 420px; font-size: 17px; line-height: 1.6; color: var(--soft); }
+.lede strong { color: var(--ink); font-weight: 600; }
+
+figure {
+  margin: 36px auto 0; padding: 26px 28px 22px; max-width: 480px; border-radius: 20px;
+  background: var(--card); border: 1px solid var(--card-edge);
+  -webkit-backdrop-filter: blur(20px) saturate(1.3); backdrop-filter: blur(20px) saturate(1.3);
+  transition: opacity .5s ease;
+}
+figure.fading { opacity: 0; }
+blockquote { margin: 0; font-family: "New York", "Iowan Old Style", Georgia, serif; font-size: 21px; line-height: 1.5; }
+blockquote::before { content: "“"; } blockquote::after { content: "”"; }
+figcaption { margin-top: 12px; font-size: 14px; color: var(--soft); }
+figcaption::before { content: "— "; }
+button {
+  margin-top: 14px; padding: 6px 14px; border: 0; border-radius: 999px; font: inherit; font-size: 13px;
+  color: var(--soft); background: transparent; cursor: pointer;
+}
+button:hover { background: var(--card); color: var(--ink); }
+button:focus-visible { outline: 2px solid var(--soft); outline-offset: 2px; }
+
+.hint { margin: 36px auto 0; max-width: 400px; font-size: 13px; line-height: 1.6; color: var(--faint); }
+.brand { margin-top: 18px; font-size: 12px; letter-spacing: .06em; color: var(--faint); opacity: .8; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .cue span + span { display: none; }
+  .cue span:first-child::after { content: " · Breathe out"; }
+}
 </style>
-<main><div class="mark" aria-hidden="true">◉</div><h1>This can wait.</h1><p>You set this website aside for a focus session.</p><p>Take a pause from Zone’s menu bar, or return when your session ends. Then use your browser’s Back button to try again.</p><small>Zone · Your time, on purpose.</small></main></html>
+</head>
+<body>
+<div class="blob one" aria-hidden="true"></div>
+<div class="blob two" aria-hidden="true"></div>
+<div class="blob three" aria-hidden="true"></div>
+<main>
+  <div class="breath" aria-hidden="true"><div class="halo"></div><div class="ring"></div><div class="sun"></div></div>
+  <div class="cue" aria-hidden="true"><span>Breathe in</span><span>Breathe out</span></div>
+  <h1 id="headline">You’re in your zone.</h1>
+  <p class="lede" id="lede">This page will still be here later. For now, your attention is yours, and you’re spending it well.</p>
+  <figure id="quote" aria-live="polite">
+    <blockquote id="quote-text">Almost everything will work again if you unplug it for a few minutes, including you.</blockquote>
+    <figcaption id="quote-author">Anne Lamott</figcaption>
+  </figure>
+  <button type="button" id="another">Another thought</button>
+  <p class="hint">Need a real break? Pause from Zone in your menu bar, then press Back.</p>
+  <div class="brand">ZONE</div>
+</main>
+<script>
+(() => {
+  const quotes = [
+    ["Almost everything will work again if you unplug it for a few minutes, including you.", "Anne Lamott"],
+    ["You are the sky. Everything else is just the weather.", "Pema Chödrön"],
+    ["How we spend our days is, of course, how we spend our lives.", "Annie Dillard"],
+    ["Wherever you are, be all there.", "Jim Elliot"],
+    ["Focusing is about saying no.", "Steve Jobs"],
+    ["Attention is the rarest and purest form of generosity.", "Simone Weil"],
+    ["Life is long if you know how to use it.", "Seneca"],
+    ["My experience is what I agree to attend to.", "William James"],
+    ["What you do every day matters more than what you do once in a while.", "Gretchen Rubin"],
+    ["Clarity about what matters provides clarity about what does not.", "Cal Newport"],
+    ["The best way out is always through.", "Robert Frost"],
+    ["Concentrate all your thoughts upon the work at hand. The sun’s rays do not burn until brought to a focus.", "Alexander Graham Bell"],
+    ["Very little is needed to make a happy life; it is all within yourself, in your way of thinking.", "Marcus Aurelius"],
+    ["You can’t use up creativity. The more you use, the more you have.", "Maya Angelou"],
+    ["Start where you are. Use what you have. Do what you can.", "Arthur Ashe"],
+    ["The present moment is filled with joy and happiness. If you are attentive, you will see it.", "Thich Nhat Hanh"]
+  ];
+  const headlines = ["You’re in your zone.", "This one can wait.", "Back to what matters.", "Right where you need to be."];
+  const pick = (list, avoid) => {
+    let index;
+    do { index = Math.floor(Math.random() * list.length); } while (list.length > 1 && index === avoid);
+    return index;
+  };
+
+  let current = pick(quotes, -1);
+  const figure = document.getElementById("quote");
+  const show = (index) => {
+    document.getElementById("quote-text").textContent = quotes[index][0];
+    document.getElementById("quote-author").textContent = quotes[index][1];
+  };
+  show(current);
+  document.getElementById("headline").textContent = headlines[pick(headlines, -1)];
+
+  let site = "";
+  try { site = decodeURIComponent(location.hash.slice(1)).toLowerCase(); } catch (_) {}
+  site = site.replace(/^www\./, "");
+  if (/^[a-z0-9.-]{1,253}$/.test(site) && site.includes(".")) {
+    const lede = document.getElementById("lede");
+    const name = document.createElement("strong");
+    name.textContent = site;
+    lede.replaceChildren(name, " will still be here later. For now, your attention is yours, and you’re spending it well.");
+  }
+
+  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  document.getElementById("another").addEventListener("click", () => {
+    current = pick(quotes, current);
+    if (reduceMotion) { show(current); return; }
+    figure.classList.add("fading");
+    setTimeout(() => { show(current); figure.classList.remove("fading"); }, 500);
+  });
+})();
+</script>
+</body>
+</html>

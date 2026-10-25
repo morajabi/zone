@@ -19,7 +19,7 @@ struct ZoneApp: App {
             SidebarCommands()
             CommandGroup(replacing: .appTermination) {
                 Button("Quit Zone") { model.quit() }.keyboardShortcut("q")
-                    .disabled(model.hasLockedSession)
+                    .disabled(model.hasStrictSession)
             }
         }
 
@@ -33,7 +33,15 @@ struct ZoneApp: App {
             MenuBarView(model: model)
                 .onAppear { delegate.model = model }
         } label: {
-            Label(model.menuTitle, systemImage: model.activeSessions.isEmpty ? "circle.dotted.circle" : "circle.inset.filled")
+            if model.menuTitle.isEmpty {
+                Image(nsImage: MenuBarIcon.image(for: model.menuState))
+            } else {
+                Label {
+                    Text(model.menuTitle).monospacedDigit()
+                } icon: {
+                    Image(nsImage: MenuBarIcon.image(for: model.menuState))
+                }.labelStyle(.titleAndIcon)
+            }
         }
         .menuBarExtraStyle(.window)
     }
@@ -74,6 +82,11 @@ final class ZoneAppDelegate: NSObject, NSApplicationDelegate {
     weak var model: ZoneModel?
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        model?.hasLockedSession == true ? .terminateCancel : .terminateNow
+        // Never hold up logout, restart, or shutdown. Sessions are saved and resume at next launch.
+        let reason = NSAppleEventManager.shared().currentAppleEvent?
+            .attributeDescriptor(forKeyword: AEKeyword(kAEQuitReason))?.enumCodeValue
+        let systemReasons = [kAELogOut, kAEReallyLogOut, kAEShowRestartDialog, kAEShowShutdownDialog, kAERestart, kAEShutDown]
+        if let reason, systemReasons.map({ OSType($0) }).contains(reason) { return .terminateNow }
+        return model?.hasStrictSession == true ? .terminateCancel : .terminateNow
     }
 }

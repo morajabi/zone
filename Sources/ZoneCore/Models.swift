@@ -87,6 +87,9 @@ public struct FocusSession: Codable, Equatable, Identifiable, Sendable {
     }
 
     public var pausesRemaining: Int { max(0, options.pause.allowance - pausesUsed) }
+
+    /// Scheduled and locked sessions run until their end; only their pauses are available.
+    public var isStrict: Bool { scheduleID != nil || options.mode == .locked }
 }
 
 public enum ScheduleKind: String, Codable, CaseIterable, Sendable {
@@ -155,7 +158,7 @@ public enum ZoneError: Error, LocalizedError, Equatable {
         case .invalidDuration: "Choose a duration between 1 minute and 24 hours."
         case .emptyBlockList: "Add a website or an app to this block list first."
         case .invalidSchedule: "Choose valid start and end times and at least one day."
-        case .lockedSession: "This session is locked until its scheduled end."
+        case .lockedSession: "This session stays on until it ends. Only its pauses are available."
         case .noPauses: "This session has no pauses left."
         case .inactiveSession: "This session is no longer active."
         case .unsupportedVersion: "This data was saved by a newer version of Zone."

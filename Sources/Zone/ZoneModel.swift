@@ -97,12 +97,50 @@ final class ZoneModel {
             return (schedule.name, interval.start)
         }.min { $0.start < $1.start }
     }
-    var hasLockedSession: Bool { activeSessions.contains { $0.options.mode == .locked } }
+    var hasStrictSession: Bool { activeSessions.contains(where: \.isStrict) }
     var hasWebsiteSession: Bool { activeSessions.contains { !$0.blockList.domains.isEmpty } }
+
+    enum MenuState { case idle, focusing, paused }
+    var menuState: MenuState {
+        if activeSessions.isEmpty { return .idle }
+        return activeSessions.contains { !$0.isPaused(at: now) } ? .focusing : .paused
+    }
+    /// Time until blocking fully ends, or until the earliest pause ends when every session is paused.
     var menuTitle: String {
-        guard let session = activeSessions.first else { return "" }
-        let remaining = max(1, Int(ceil(session.endsAt.timeIntervalSince(now) / 60)))
-        return "\(remaining)m"
+        let focusing = activeSessions.filter { !$0.isPaused(at: now) }
+        let until = focusing.isEmpty
+            ? activeSessions.map { min($0.pausedUntil ?? $0.endsAt, $0.endsAt) }.min()
+            : focusing.map(\.endsAt).max()
+        return until.map { Self.shortDuration($0.timeIntervalSince(now)) } ?? ""
+    }
+
+    static func shortDuration(_ interval: TimeInterval) -> String {
+        let minutes = max(1, Int(ceil(interval / 60)))
+        if minutes < 60 { return "\(minutes)m" }
+        return minutes % 60 == 0 ? "\(minutes / 60)h" : "\(minutes / 60)h \(minutes % 60)m"
+    }
+
+    static let durationPresets = [15, 25, 30, 45, 60, 90, 120]
+    var durationChoices: [Int] {
+        let presets = Self.durationPresets
+        return (1...1440).contains(quickMinutes) && !presets.contains(quickMinutes) ? (presets + [quickMinutes]).sorted() : presets
+    }
+
+    func isRunning(_ schedule: FocusSchedule) -> Bool { activeSessions.contains { $0.scheduleID == schedule.id } }
+    func runningSession(for schedule: FocusSchedule) -> FocusSession? { activeSessions.first { $0.scheduleID == schedule.id } }
+
+    /// Running schedules first, then by their next start; schedules that are off come last.
+    var schedulesByNextStart: [FocusSchedule] {
+        func rank(_ schedule: FocusSchedule) -> (Int, Date) {
+            if let session = runningSession(for: schedule) { return (0, session.endsAt) }
+            if let next = SessionEngine.nextInterval(for: schedule, after: now) { return (1, next.start) }
+            return (schedule.isEnabled ? 2 : 3, .distantFuture)
+        }
+        return document.schedules.sorted { lhs, rhs in
+            let (a, b) = (rank(lhs), rank(rhs))
+            return a.0 != b.0 ? a.0 < b.0 : a.1 != b.1 ? a.1 < b.1
+                : lhs.name.localizedStandardCompare(rhs.name) == .orderedAscending
+        }
     }
     var websiteBlockingReady: Bool { websiteMode == .browser ? browsers.hasConnectedBrowser : filter.isReady }
     var blockingIsDegraded: Bool {
@@ -248,7 +286,7 @@ final class ZoneModel {
     }
 
     func quit() {
-        guard !hasLockedSession else { errorMessage = "A locked session is still running. Zone can quit when it ends."; return }
+        guard !hasStrictSession else { errorMessage = "Zone stays open until your scheduled or locked session ends."; return }
         if !activeSessions.isEmpty {
             let alert = NSAlert()
             alert.messageText = "End sessions and quit Zone?"

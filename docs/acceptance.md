@@ -1,5 +1,26 @@
 # Acceptance evidence
 
+## Menu bar, strict schedules, and focus page — October 25, 2026
+
+- The menu-bar panel no longer collapses to an empty header. A local Debug build showed the greeting, next schedule, one-line start (duration, list, Start), and a compact schedule list ordered by next start.
+- With temporary data on a disposable `zone-preview.example` list, the panel showed a one-off card with End and a scheduled card with a lock and no End. Quit was disabled while the scheduled session ran. Pausing the scheduled session showed its pause countdown, Resume, and the time focus resumes. The menu bar showed the remaining time beside the new glyph.
+- The Schedules page disabled the running schedule's switch. Its editor refuses changes until the session ends.
+- Core tests cover that scheduled sessions can pause but not end early. Saved data was restored from a byte-identical backup afterwards.
+- The focus page was checked in a browser preview; the site name is read from the URL fragment, which that preview drops. Starting a session against real block lists, Safari/Chrome redirection of the new page, and dark appearance were not re-run in this pass.
+
+## Downloadable release — 0.2.0, October 17, 2026
+
+- 24 standalone HTML studies were rendered and compared; the selected timer-first direction is recorded in [the design decision](design/decision.md). These are design studies, not native-app acceptance.
+- Release candidate build 11 exercised the simplified duration and rules controls. Invalid duration disabled Start; a valid value restored it. A pending list input saved both domains directly.
+- Chrome redirected a disposable example-domain tab. A one-minute pause allowed a fresh tab, then automatic resume redirected it and exhausted the allowance. The session ended naturally.
+- A one-minute locked session required confirmation, hid early-ending controls, disabled normal Quit, and ended naturally.
+- Block-list and schedule rows opened their editors directly. An enabled weekday schedule saved, reopened with its settings preserved, and appeared in the Focus view’s upcoming row.
+- Build 12 tightens Focus spacing for smaller windows; the session engine and browser/app enforcement are unchanged from build 11. Compilation and all 23 core tests run in GitHub Actions, not on the maintainer’s Mac.
+- Final build source: `102f021044014cf6a8ce493719e2bc1b5da0bb63`. Hosted universal build: [39054302200](https://github.com/morajabi/zone/actions/runs/39054302200).
+- Signing uses existing local Keychain identities. Private signing keys and notarization credentials were not uploaded to GitHub.
+
+The redesigned menu-bar panel shares the tested controls, but its actual popover could not be re-inspected through the computer-use service in this pass. Safari and Dia enforcement retain the earlier live baseline below; this release pass rechecked Chrome. Intel hardware, other browser adapters, private windows, and network-filter traffic remain unqualified.
+
 ## UI polish pass — October 17, 2026
 
 - Version 0.1.0 (10) is signed, notarized, stapled, and installed locally. Both arm64 and x86_64 Release targets compiled.

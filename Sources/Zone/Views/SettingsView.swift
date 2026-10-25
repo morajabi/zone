@@ -46,7 +46,8 @@ private struct GeneralSettings: View {
             }
             Section("Sessions") {
                 LabeledContent("Flexible", value: "End whenever you need")
-                LabeledContent("Locked", value: "Runs until its scheduled end")
+                LabeledContent("Locked", value: "Runs until its end")
+                LabeledContent("Scheduled", value: "Always runs until its end")
                 Text("Set pause length and allowance before each session. Pauses resume automatically and don’t extend the session.")
                     .font(.callout).foregroundStyle(.secondary)
                 Text("Zone must stay running to control browsers and close blocked apps. It’s a personal focus tool, and can be bypassed by force quitting it.")
