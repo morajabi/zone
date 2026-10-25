@@ -1,51 +1,55 @@
-![Zone — Make room for focus. A small, native macOS app for fewer distractions.](docs/images/banner.svg)
+<p align="center">
+  <img src="docs/images/icon.png" alt="Zone app icon" width="96">
+</p>
+<h1 align="center">Zone</h1>
+<p align="center">
+  A calm little focus app for your Mac.
+  <br><br>
+  <a href="https://github.com/morajabi/zone/releases/latest"><b>Download</b></a> ·
+  <a href="#build-it-yourself">Build from source</a> ·
+  <a href="https://github.com/morajabi/zone/issues">Report an issue</a>
+</p>
 
-Zone lives in your menu bar and blocks distracting websites and apps while you focus. Start a session now or make it part of your weekly routine.
+![Zone's menu bar panel: start a 25-minute session and see today's schedules](docs/images/menu-bar.jpg)
 
-**[Download for macOS](https://github.com/morajabi/zone/releases/latest)** · [Build from source](#build-it-yourself) · [Report an issue](https://github.com/morajabi/zone/issues)
+Zone lives in your menu bar and keeps distracting websites and apps out of the way while you focus. Start a session in one click, or put focus time on a schedule and let Zone take care of it.
 
-macOS 15 or later · Apple silicon and Intel · Free and open source
+It's free and open source. No account, no tracking, nothing leaves your Mac.
 
-The download is Developer ID signed and notarized by Apple. Open the disk image and drag Zone to Applications.
+## What it does
 
-No account, subscription, analytics, or third-party runtime dependencies. Everything stays on your Mac.
+- **One click to focus.** Pick how long and what to block, then hit Start.
+- **Schedules that stick.** Plan focus time for the days you choose. Once a scheduled session starts, it stays on until it's over. No turning it off halfway through.
+- **Breaks, built in.** Take a short pause when you need one. Blocking comes back on its own.
+- **A kinder blocked page.** Open something you shouldn't, and you get a moment to breathe and a good quote instead of an error.
+- **Always close by.** Your countdown and schedules are one click away in the menu bar.
 
-![Zone’s native Focus window, with one Start action and session options collapsed](docs/images/focus.png)
+![A blocked YouTube tab showing Zone's calm focus page with a breathing sun and a quote](docs/images/focus-page.png)
 
-## Made for your routine
+## Get started
 
-- **One clear start.** Set the time, choose a block list, and focus.
-- **Your schedule.** Repeat on selected weekdays, including overnight, or plan a session just once.
-- **Your commitment.** End a one-off flexible session early, or lock it until the timer ends. Scheduled sessions always stay on until they end.
-- **Room for a break.** Choose how many pauses you get and how long they last. Blocking resumes automatically; pauses never extend the session.
-- **Always close by.** The menu bar shows the countdown, a one-line start, and your schedules at a glance. Pause or resume there. Sessions survive restarts and reconcile after sleep.
+1. [Download Zone](https://github.com/morajabi/zone/releases/latest), open the disk image, and drag Zone to Applications.
+2. Open Zone and make a block list with the websites and apps that pull you away.
+3. Go to **Settings → Websites** and connect the browsers you use. macOS will ask you to allow it.
+4. Start a session from the menu bar, or add a schedule. Turn on **Open at Login** so schedules run after a restart.
 
-Running sessions keep their original rules. Overlapping sessions combine their blocks; pausing one leaves the others running.
-
-## Start focusing
-
-1. Create a block list from **Focus** and add websites or apps.
-2. For websites, open **Zone → Settings → Websites** (`⌘,`) and connect each browser you use. Zone opens the browser if needed; approve its macOS Automation prompt.
-3. Choose a duration, mode, and pause allowance, then start the session. Save work in any selected apps first.
-4. Use the menu bar to pause or resume. To plan future sessions, open **Schedules**. Turn on **Open at Login** in Settings if you want Zone to run after a restart.
-
-If browser access was denied, allow Zone under **System Settings → Privacy & Security → Automation**.
+Works on macOS 15 or later, on Apple silicon and Intel. Signed and notarized by Apple.
 
 ## How blocking works
 
-**Browser control is the default.** Zone reads tab addresses through macOS Apple Events and redirects blocked tabs to a bundled local page. It does not change network settings, read page contents, or save browsing history. Safari, Chrome, and Dia have been tested live. Adapters also exist for Arc, Brave, Edge, and Opera; those remain unverified. Browsers without a supported automation interface, including Firefox, can be blocked as apps.
+**Websites.** Zone checks the address of your open tabs and sends blocked ones to its own local page. It doesn't read page content, keep your history, or touch network settings. Tested with Safari, Chrome, and Dia. Arc, Brave, Edge, Opera, and Helium should work too. Firefox and other browsers can be blocked as apps.
 
-The check is periodic, so a page may appear briefly before redirection. Zone must stay running. During a pause or after a session, use Back to return to a redirected page; tabs are not restored automatically.
+**Apps.** Blocked apps are closed right after they open. Save your work before you start, because Zone may need to force quit them.
 
-**App blocking closes selected apps just after launch.** It asks them to quit, then force quits if needed, which can discard unsaved changes. It does not prevent macOS from launching the process.
+**Sticking to it.** One-off sessions can be flexible or locked. Scheduled sessions are always strict: you can take the breaks you set, but you can't end them early, change the schedule, or quit Zone until they're done. Restarting or shutting down your Mac still works, and the session picks up when Zone opens again.
 
-**Locked and scheduled sessions are a personal commitment.** Zone hides early-ending controls, keeps a running schedule from being edited, turned off, or deleted, and prevents normal quitting until the session ends. Logout, restart, and shutdown still proceed; the session resumes at next launch. It is not tamper-proof: force quitting Zone bypasses browser and app blocking.
+That said, Zone is a commitment, not a cage. It needs to be running to block anything, and force quitting it gets around the blocks.
 
-An **optional network filter** is included in the signed download. It needs macOS approval, and its traffic coverage is still experimental. Compiling that option yourself requires Apple provisioning. See [network-filter setup and limitations](docs/network-filter.md). Browser control is the simpler supported path.
+There's also an optional network filter in the signed download. It's experimental and needs macOS approval. [Read more](docs/network-filter.md).
 
 ## Build it yourself
 
-Requires macOS 15 or later, Xcode 26 or later (Swift 6.2+), and [XcodeGen](https://github.com/yonaskolb/XcodeGen).
+You'll need macOS 15 or later, Xcode 26 or later, and [XcodeGen](https://github.com/yonaskolb/XcodeGen).
 
 ```sh
 git clone https://github.com/morajabi/zone.git
@@ -55,11 +59,7 @@ brew install xcodegen
 open build/Build/Products/Debug/Zone.app
 ```
 
-The local build supports browser control and app blocking **without a paid Apple Developer account**. It uses ad-hoc signing; rebuilding may require granting Automation permission again.
-
-Build scripts default to two concurrent Xcode jobs. Set `ZONE_BUILD_JOBS=1` to reduce concurrency further, or raise it on a dedicated build machine.
-
-To edit in Xcode, run `xcodegen generate` and open `Zone.xcodeproj`. The generated project is ignored; edit `project.yml` for project changes.
+Local builds block websites and apps without a paid Apple Developer account. They're signed ad hoc, so macOS may ask for browser access again after you rebuild.
 
 ## Development
 
@@ -68,19 +68,12 @@ swift test
 ./scripts/build.sh
 ```
 
-- `Sources/Zone`: native UI, browser automation, app blocking, login support, and optional filter lifecycle.
-- `Sources/ZoneCore`: models, scheduling, pause rules, domain matching, persistence, and network metadata parsing.
-- `Sources/ZoneFilter` and `Shared`: optional system extension and authenticated XPC.
-- `Tests/ZoneCoreTests`: deterministic tests for scheduling, DST, overlap, lock/pause behavior, persistence, and parsing.
+- `Sources/Zone`: the app, menu bar, browser and app blocking.
+- `Sources/ZoneCore`: sessions, schedules, pauses, and saved data, with tests in `Tests/ZoneCoreTests`.
+- `Sources/ZoneFilter` and `Shared`: the optional network filter.
 
-Signing is configurable through `Config/Base.xcconfig`. Copy `Config/Signing.xcconfig.example` to the ignored `Config/Signing.xcconfig` to supply your own team and bundle identifiers. Profiles, keys, and local signing settings are never committed.
-
-Data is stored in `~/Library/Application Support/Zone/sessions.json`, written atomically with owner-only permissions. Unreadable data is preserved instead of silently replaced.
-
-See [contributing](CONTRIBUTING.md), [release and signing instructions](docs/releasing.md), and [tested behavior and remaining gaps](docs/acceptance.md).
-
-The UI was refined through [24 interactive HTML studies](docs/design/spikes/index.html). Read the [design decision](docs/design/decision.md), or open the gallery locally to compare them.
+Your data is saved in `~/Library/Application Support/Zone/sessions.json`. See [contributing](CONTRIBUTING.md), [releasing](docs/releasing.md), and [what's been tested](docs/acceptance.md).
 
 ## License
 
-[MIT](LICENSE) © 2026 Mo Rajabi.
+[MIT](LICENSE) © 2026 Mo Rajabi
