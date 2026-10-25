@@ -1,5 +1,11 @@
 # Acceptance evidence
 
+## Release 0.3.0 — October 25, 2026
+
+- Hosted universal build [40195714806](https://github.com/morajabi/zone/actions/runs/40195714806) from `19576da418098788685000fd85250edd8f5273da` passed the core tests. Its source commit and archive checksum were verified before signing.
+- The app and disk image were Developer ID signed, notarized, and stapled. A quarantined download of the published DMG passed Gatekeeper as a notarized Developer ID image, and the downloaded assets matched `SHA256SUMS`.
+- Installed from the DMG, 0.3.0 opened with saved browser access and resumed a session that was already running. Helium support is implemented but not runtime-tested; Helium isn't installed on the maintainer's Mac.
+
 ## Menu bar, strict schedules, and focus page — October 25, 2026
 
 - The menu-bar panel no longer collapses to an empty header. A local Debug build showed the greeting, next schedule, one-line start (duration, list, Start), and a compact schedule list ordered by next start.
