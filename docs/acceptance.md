@@ -55,7 +55,7 @@ The redesigned menu-bar panel shares the tested controls, but its actual popover
 - Network filtering was then turned off when browser control became the requested default. Switching methods was exercised on build 8; the optional network mode showed the filter off, and Browser control was restored as the saved selection.
 - Test lists, schedules, and browser windows were removed. No session remains active; quick-session defaults are 25 minutes with one five-minute pause.
 
-Arc, Brave, Edge, and Opera adapters are implemented but not runtime-qualified. Network traffic blocking has not been qualified.
+Arc, Brave, Edge, Opera, and Helium adapters are implemented but not runtime-qualified. Network traffic blocking has not been qualified.
 
 ## Automated
 
@@ -88,7 +88,7 @@ The unsigned-development build deliberately contains no activated system extensi
 ## Browser control — remaining validation
 
 - Connect each browser and verify denied permission is explained.
-- Repeat the Chrome/Dia checks in Arc, Brave, Edge, and Opera.
+- Repeat the Chrome/Dia checks in Arc, Brave, Edge, Opera, and Helium.
 - Multiple profiles, private windows, and tabs closing mid-scan.
 - Early resume in Chrome/Dia, overlapping browser sessions, scheduled browser sessions, and sleep/wake.
 - CPU usage with many windows and tabs.

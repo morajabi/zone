@@ -13,12 +13,11 @@ struct MenuBarView: View {
             Group {
                 if model.activeSessions.isEmpty {
                     MenuGreeting(model: model)
+                } else if model.activeSessions.count <= 2 {
+                    sessionCards
                 } else {
-                    VStack(spacing: 8) {
-                        ForEach(model.activeSessions) { session in
-                            MenuSessionCard(session: session, model: model)
-                        }
-                    }
+                    // A fixed height keeps the panel on screen; a bare ScrollView collapses in menu bar windows.
+                    ScrollView { sessionCards }.frame(height: 300)
                 }
             }.padding(10)
             MenuNotices(model: model)
@@ -28,7 +27,7 @@ struct MenuBarView: View {
             MenuSchedules(model: model)
             MenuDivider()
             HStack(spacing: 2) {
-                MenuRow(action: { openWindow(id: "main"); NSApp.activate() }) {
+                MenuRow(action: { openWindow.openMain() }) {
                     Text("Open Zone")
                 }
                 Button { openSettings(); NSApp.activate() } label: {
@@ -45,6 +44,14 @@ struct MenuBarView: View {
         }
         .frame(width: 300)
         .modifier(ErrorPresenter(model: model))
+    }
+
+    private var sessionCards: some View {
+        VStack(spacing: 8) {
+            ForEach(model.activeSessions) { session in
+                MenuSessionCard(session: session, model: model)
+            }
+        }
     }
 }
 
@@ -161,11 +168,7 @@ private struct MenuNotices: View {
                 Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
                 Text(model.websiteBlockingTitle).font(.caption)
                 Spacer(minLength: 8)
-                Button("Fix…") {
-                    model.settingsPane = .websites
-                    openSettings()
-                    NSApp.activate()
-                }.buttonStyle(.link).font(.caption)
+                Button("Fix…") { openSettings.showWebsites(model) }.buttonStyle(.link).font(.caption)
             }.padding(.horizontal, 14).padding(.bottom, 10)
         }
         if let failure = model.appBlockFailure {
@@ -190,9 +193,8 @@ private struct MenuQuickStart: View {
             MenuSectionHeader(title: model.activeSessions.isEmpty ? "Focus now" : "Add a session")
             if model.availableLists.isEmpty {
                 Button("Choose What to Block…") {
-                    openWindow(id: "main")
-                    NSApp.activate()
-                    model.newList()
+                    openWindow.openMain()
+                    if !model.isEditing { model.newList() }
                 }.buttonStyle(.borderedProminent)
             } else {
                 HStack(spacing: 6) {
@@ -211,17 +213,14 @@ private struct MenuQuickStart: View {
                         else { model.startQuickSession() }
                     }
                     .buttonStyle(.borderedProminent)
-                    .disabled(needsBrowser || model.storageFailed || !(1...1440).contains(model.quickMinutes))
+                    .disabled(model.selectedList?.isEmpty != false || needsBrowser || model.storageFailed
+                              || !(1...1440).contains(model.quickMinutes))
                 }
                 if needsBrowser {
                     HStack(spacing: 6) {
                         Text("Connect a browser to block websites.").font(.caption).foregroundStyle(.secondary)
                         Spacer(minLength: 4)
-                        Button("Set Up…") {
-                            model.settingsPane = .websites
-                            openSettings()
-                            NSApp.activate()
-                        }.buttonStyle(.link).font(.caption)
+                        Button("Set Up…") { openSettings.showWebsites(model) }.buttonStyle(.link).font(.caption)
                     }
                 }
             }
@@ -249,8 +248,9 @@ private struct MenuSchedules: View {
                 MenuSectionHeader(title: "Schedules")
                 Spacer()
                 Button {
-                    openWindow(id: "main")
-                    NSApp.activate()
+                    openWindow.openMain()
+                    // Leave an editor that's already open, and its unsaved changes, as it is.
+                    guard !model.isEditing else { return }
                     model.page = .schedules
                     model.newSchedule()
                 } label: {
@@ -269,8 +269,7 @@ private struct MenuSchedules: View {
                 if schedules.count > limit {
                     MenuRow(action: {
                         model.page = .schedules
-                        openWindow(id: "main")
-                        NSApp.activate()
+                        openWindow.openMain()
                     }) {
                         Text("Show All \(schedules.count)").font(.caption).foregroundStyle(.secondary)
                     }
@@ -298,10 +297,12 @@ private struct MenuScheduleRow: View {
 
     var body: some View {
         MenuRow(action: {
-            model.page = .schedules
-            model.editingSchedule = schedule
-            openWindow(id: "main")
-            NSApp.activate()
+            // Leave an editor that's already open, and its unsaved changes, as it is.
+            if !model.isEditing {
+                model.page = .schedules
+                model.editingSchedule = schedule
+            }
+            openWindow.openMain()
         }) {
             HStack(spacing: 10) {
                 ScheduleDot(running: running, enabled: schedule.isEnabled)

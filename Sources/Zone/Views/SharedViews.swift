@@ -2,6 +2,22 @@ import AppKit
 import SwiftUI
 import ZoneCore
 
+extension OpenWindowAction {
+    /// Opens Zone's main window and brings the app forward.
+    func openMain() {
+        self(id: "main")
+        NSApp.activate()
+    }
+}
+
+extension OpenSettingsAction {
+    func showWebsites(_ model: ZoneModel) {
+        model.settingsPane = .websites
+        self()
+        NSApp.activate()
+    }
+}
+
 struct PanelStyle: ViewModifier {
     func body(content: Content) -> some View {
         content
@@ -36,11 +52,7 @@ struct BrowserSetupPrompt: View {
                 .font(.callout.weight(.medium))
             Text(model.websiteBlockingDetail).font(.caption).foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
-            Button("Set Up Website Blocking…") {
-                model.settingsPane = .websites
-                openSettings()
-                NSApp.activate()
-            }
+            Button("Set Up Website Blocking…") { openSettings.showWebsites(model) }
         }.padding(12).frame(maxWidth: .infinity, alignment: .leading).modifier(PanelStyle())
     }
 }
@@ -61,10 +73,13 @@ struct BlockingNotice: View {
 enum SessionOptionsSummary {
     /// Scheduled sessions are always strict, so their summary leaves out the mode.
     static func text(for options: SessionOptions, scheduled: Bool = false) -> String {
-        let allowance = options.pause.allowance
-        let pauses = allowance == 0 ? "No pauses" : allowance == 1 ? "1 pause" : "\(allowance) pauses"
-        let duration = allowance == 0 ? "" : ", \(options.pause.minutes) min"
-        return "\(scheduled ? "Stays on until the end" : options.mode.title) · \(pauses)\(duration)"
+        "\(scheduled ? "Stays on until the end" : options.mode.title) · \(pauses(options.pause))"
+    }
+
+    /// "No pauses", "1 pause, 5 min", or "3 pauses, 10 min".
+    static func pauses(_ pause: PausePolicy) -> String {
+        if pause.allowance == 0 { return "No pauses" }
+        return "\(pause.allowance == 1 ? "1 pause" : "\(pause.allowance) pauses"), \(pause.minutes) min"
     }
 }
 

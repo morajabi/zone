@@ -19,6 +19,8 @@ struct SupportedBrowser: Identifiable, Sendable {
         .init(id: "com.brave.Browser", name: "Brave"),
         .init(id: "com.microsoft.edgemac", name: "Microsoft Edge"),
         .init(id: "com.operasoftware.Opera", name: "Opera"),
+        // Helium keeps Chromium's AppleScript dictionary.
+        .init(id: "net.imput.helium", name: "Helium"),
     ]
 }
 

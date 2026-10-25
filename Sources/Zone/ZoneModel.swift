@@ -128,19 +128,19 @@ final class ZoneModel {
 
     func isRunning(_ schedule: FocusSchedule) -> Bool { activeSessions.contains { $0.scheduleID == schedule.id } }
     func runningSession(for schedule: FocusSchedule) -> FocusSession? { activeSessions.first { $0.scheduleID == schedule.id } }
+    var isEditing: Bool { editingList != nil || editingSchedule != nil }
 
     /// Running schedules first, then by their next start; schedules that are off come last.
     var schedulesByNextStart: [FocusSchedule] {
-        func rank(_ schedule: FocusSchedule) -> (Int, Date) {
-            if let session = runningSession(for: schedule) { return (0, session.endsAt) }
-            if let next = SessionEngine.nextInterval(for: schedule, after: now) { return (1, next.start) }
-            return (schedule.isEnabled ? 2 : 3, .distantFuture)
+        let ranked = document.schedules.map { schedule -> (schedule: FocusSchedule, group: Int, date: Date) in
+            if let session = runningSession(for: schedule) { return (schedule, 0, session.endsAt) }
+            if let next = SessionEngine.nextInterval(for: schedule, after: now) { return (schedule, 1, next.start) }
+            return (schedule, schedule.isEnabled ? 2 : 3, .distantFuture)
         }
-        return document.schedules.sorted { lhs, rhs in
-            let (a, b) = (rank(lhs), rank(rhs))
-            return a.0 != b.0 ? a.0 < b.0 : a.1 != b.1 ? a.1 < b.1
-                : lhs.name.localizedStandardCompare(rhs.name) == .orderedAscending
-        }
+        return ranked.sorted { a, b in
+            a.group != b.group ? a.group < b.group : a.date != b.date ? a.date < b.date
+                : a.schedule.name.localizedStandardCompare(b.schedule.name) == .orderedAscending
+        }.map(\.schedule)
     }
     var websiteBlockingReady: Bool { websiteMode == .browser ? browsers.hasConnectedBrowser : filter.isReady }
     var blockingIsDegraded: Bool {
@@ -254,6 +254,10 @@ final class ZoneModel {
     }
 
     func saveSchedule(_ schedule: FocusSchedule) -> Bool {
+        if let session = runningSession(for: schedule) {
+            errorMessage = Self.runningScheduleMessage(session)
+            return false
+        }
         do {
             try SessionEngine.validate(schedule)
             guard let list = document.blockLists.first(where: { $0.id == schedule.blockListID }), !list.isEmpty else { throw ZoneError.emptyBlockList }
@@ -271,9 +275,18 @@ final class ZoneModel {
     }
 
     func deleteSchedule(_ schedule: FocusSchedule) {
+        if let session = runningSession(for: schedule) {
+            errorMessage = Self.runningScheduleMessage(session)
+            return
+        }
         var next = document
         next.schedules.removeAll { $0.id == schedule.id }
         commit(next)
+    }
+
+    /// Scheduled sessions are strict: their schedule stays as it is until the session ends.
+    static func runningScheduleMessage(_ session: FocusSession) -> String {
+        "This schedule is running. You can change it after it ends at \(session.endsAt.formatted(date: .omitted, time: .shortened))."
     }
 
     func setLogin(_ enabled: Bool) {

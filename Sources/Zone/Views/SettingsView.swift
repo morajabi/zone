@@ -76,7 +76,7 @@ private struct BrowserSettings: View {
             }
             Button("Refresh Browsers") { model.browsers.refreshInstalled() }
         } header: { Text("Browsers") } footer: {
-            Text("Supports Safari, Chrome, Dia, Arc, Brave, Edge, and Opera. You can block other browsers as apps.")
+            Text("Supports Safari, Chrome, Dia, Arc, Brave, Edge, Opera, and Helium. You can block other browsers as apps.")
         }
         Section {
             Text("A page may appear briefly before it redirects. During a pause or after a session, use Back to return to the page.")

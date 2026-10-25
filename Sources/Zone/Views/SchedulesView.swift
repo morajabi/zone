@@ -119,10 +119,7 @@ private struct ScheduleRow: View {
             + (schedule.kind == .weekly && schedule.endMinute < schedule.startMinute ? " (next day)" : "")
     }
 
-    private var pauses: String {
-        let pause = schedule.options.pause
-        return pause.allowance == 0 ? "No pauses" : "\(pause.allowance) \(pause.allowance == 1 ? "pause" : "pauses"), \(pause.minutes) min"
-    }
+    private var pauses: String { SessionOptionsSummary.pauses(schedule.options.pause) }
 }
 
 struct ScheduleEditor: View {
@@ -140,9 +137,7 @@ struct ScheduleEditor: View {
     private var isRunning: Bool { model.isRunning(schedule) }
 
     private var validationMessage: String? {
-        if isRunning, let session = model.runningSession(for: schedule) {
-            return "This schedule is running. You can change it after it ends at \(session.endsAt.formatted(date: .omitted, time: .shortened))."
-        }
+        if let session = model.runningSession(for: schedule) { return ZoneModel.runningScheduleMessage(session) }
         if schedule.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return "Enter a name for this schedule." }
         if schedule.kind == .weekly {
             if schedule.weekdays.isEmpty { return "Choose at least one day." }

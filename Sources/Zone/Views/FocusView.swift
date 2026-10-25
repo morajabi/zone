@@ -54,8 +54,7 @@ struct FirstListPrompt: View {
                 .foregroundStyle(.secondary).multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
             Button("Create a Block List…", systemImage: "plus") {
-                openWindow(id: "main")
-                NSApp.activate()
+                openWindow.openMain()
                 model.newList()
             }.buttonStyle(.borderedProminent).padding(.top, 4)
         }.frame(maxWidth: 380)
