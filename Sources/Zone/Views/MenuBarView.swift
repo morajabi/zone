@@ -70,7 +70,7 @@ private struct MenuGreeting: View {
     }
 
     private var greeting: String {
-        switch Calendar.autoupdatingCurrent.component(.hour, from: model.now) {
+        switch model.calendar.component(.hour, from: model.now) {
         case 5..<12: "Good morning"
         case 12..<17: "Good afternoon"
         case 17..<22: "Good evening"
@@ -81,7 +81,7 @@ private struct MenuGreeting: View {
     private var subtitle: String {
         if model.availableLists.isEmpty { return "Choose what to block, then focus in one click." }
         guard let next = model.nextScheduledSession else { return "Ready when you are." }
-        return "Next up: \(next.name), \(MenuFormat.when(next.start, now: model.now))"
+        return "Next up: \(next.name), \(MenuFormat.when(next.start, now: model.now, calendar: model.calendar))"
     }
 }
 
@@ -92,7 +92,7 @@ private struct MenuSessionCard: View {
 
     private var paused: Bool { session.isPaused(at: model.now) }
     private var pauseEnd: Date { min(session.pausedUntil ?? session.endsAt, session.endsAt) }
-    private var endTime: String { session.endsAt.formatted(date: .omitted, time: .shortened) }
+    private var endTime: String { model.calendar.format(session.endsAt) }
     private var progress: Double {
         let total = session.endsAt.timeIntervalSince(session.startsAt)
         return total > 0 ? min(1, max(0, model.now.timeIntervalSince(session.startsAt) / total)) : 1
@@ -101,7 +101,7 @@ private struct MenuSessionCard: View {
     private var caption: String {
         if paused {
             return pauseEnd < session.endsAt
-                ? "Paused · focus resumes at \(pauseEnd.formatted(date: .omitted, time: .shortened))"
+                ? "Paused · focus resumes at \(model.calendar.format(pauseEnd))"
                 : "Paused · ends at \(endTime)"
         }
         let pauses = session.pausesRemaining == 0 ? "no pauses left"
@@ -288,14 +288,15 @@ private struct MenuScheduleRow: View {
 
     private var trailing: String {
         if running { return "Now" }
-        if let next = SessionEngine.nextInterval(for: schedule, after: model.now) {
-            return MenuFormat.day(next.start, now: model.now)
+        if let next = model.nextInterval(for: schedule) {
+            return MenuFormat.day(next.start, now: model.now, calendar: model.calendar)
         }
         if !schedule.isEnabled { return "Off" }
         return schedule.kind == .once ? "Done" : ""
     }
 
     var body: some View {
+        let summary = ScheduleFormat.summary(schedule, calendar: model.calendar)
         MenuRow(action: {
             // Leave an editor that's already open, and its unsaved changes, as it is.
             if !model.isEditing {
@@ -308,7 +309,7 @@ private struct MenuScheduleRow: View {
                 ScheduleDot(running: running, enabled: schedule.isEnabled)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(schedule.name).font(.callout).lineLimit(1)
-                    Text(ScheduleFormat.summary(schedule)).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                    Text(summary).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                 }
                 Spacer(minLength: 8)
                 Text(trailing)
@@ -318,7 +319,7 @@ private struct MenuScheduleRow: View {
         }
         .opacity(schedule.isEnabled || running ? 1 : 0.6)
         .help(running ? "Running until it ends. Scheduled sessions can’t be ended early." : "Edit \(schedule.name)")
-        .accessibilityLabel("\(schedule.name), \(ScheduleFormat.summary(schedule)), \(trailing)")
+        .accessibilityLabel("\(schedule.name), \(summary), \(trailing)")
     }
 }
 
@@ -406,25 +407,28 @@ enum MenuFormat {
     }
 
     /// "in 20 min", "at 9:00 AM", "tomorrow at 9:00 AM", or "Tue at 9:00 AM".
-    static func when(_ date: Date, now: Date) -> String {
-        let calendar = Calendar.autoupdatingCurrent
-        let time = date.formatted(date: .omitted, time: .shortened)
+    static func when(_ date: Date, now: Date, calendar: Calendar) -> String {
+        let time = calendar.format(date)
         let minutes = Int(ceil(date.timeIntervalSince(now) / 60))
         if minutes <= 60 { return "in \(max(1, minutes)) min" }
         if calendar.isDate(date, inSameDayAs: now) { return "at \(time)" }
-        if calendar.isDateInTomorrow(date) { return "tomorrow at \(time)" }
-        return "\(date.formatted(.dateTime.weekday(.abbreviated))) at \(time)"
+        if isTomorrow(date, now: now, calendar: calendar) { return "tomorrow at \(time)" }
+        return "\(calendar.format(date, as: .dateTime.weekday(.abbreviated))) at \(time)"
     }
 
     /// A short day label for a list: "in 20 min", "Today", "Tomorrow", "Tue", or "Oct 28".
-    static func day(_ date: Date, now: Date) -> String {
-        let calendar = Calendar.autoupdatingCurrent
+    static func day(_ date: Date, now: Date, calendar: Calendar) -> String {
         let minutes = Int(ceil(date.timeIntervalSince(now) / 60))
         if minutes <= 60 { return "in \(max(1, minutes)) min" }
         if calendar.isDate(date, inSameDayAs: now) { return "Today" }
-        if calendar.isDateInTomorrow(date) { return "Tomorrow" }
-        if date.timeIntervalSince(now) < 6 * 86400 { return date.formatted(.dateTime.weekday(.abbreviated)) }
-        return date.formatted(.dateTime.month(.abbreviated).day())
+        if isTomorrow(date, now: now, calendar: calendar) { return "Tomorrow" }
+        if date.timeIntervalSince(now) < 6 * 86400 { return calendar.format(date, as: .dateTime.weekday(.abbreviated)) }
+        return calendar.format(date, as: .dateTime.month(.abbreviated).day())
+    }
+
+    private static func isTomorrow(_ date: Date, now: Date, calendar: Calendar) -> Bool {
+        guard let tomorrow = calendar.date(byAdding: .day, value: 1, to: now) else { return false }
+        return calendar.isDate(date, inSameDayAs: tomorrow)
     }
 }
 

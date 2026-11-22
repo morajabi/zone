@@ -143,7 +143,7 @@ private struct UpcomingSessionView: View {
                         Image(systemName: "calendar").foregroundStyle(.secondary)
                         VStack(alignment: .leading, spacing: 3) {
                             Text(next.name).font(.callout.weight(.medium))
-                            Text("Starts \(next.start, format: .dateTime.weekday().month(.abbreviated).day().hour().minute())")
+                            Text("Starts \(model.calendar.format(next.start, as: .dateTime.weekday().month(.abbreviated).day().hour().minute()))")
                                 .font(.caption).foregroundStyle(.secondary)
                         }
                         Spacer()

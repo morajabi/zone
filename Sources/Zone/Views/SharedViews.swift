@@ -156,7 +156,7 @@ struct SessionCard: View {
 
             VStack(spacing: 6) {
                 RuleSummary(list: session.blockList)
-                Text("Session ends at \(session.endsAt, format: .dateTime.hour().minute())")
+                Text("Session ends at \(model.calendar.format(session.endsAt))")
                     .font(.caption).foregroundStyle(.secondary)
                 if paused {
                     Text((session.pausedUntil ?? session.endsAt) < session.endsAt
@@ -266,33 +266,53 @@ struct ZoneMark: View {
 
 enum ScheduleFormat {
     /// "Weekdays · 9:00 AM – 11:00 AM" or "Oct 28 · 9:00 AM – 11:00 AM".
-    static func summary(_ schedule: FocusSchedule) -> String {
+    static func summary(_ schedule: FocusSchedule, calendar: Calendar) -> String {
         if schedule.kind == .once {
-            let calendar = Calendar.autoupdatingCurrent
-            let day = schedule.onceStart.formatted(.dateTime.month(.abbreviated).day())
+            let day = calendar.format(schedule.onceStart, as: .dateTime.month(.abbreviated).day())
             let end = calendar.isDate(schedule.onceStart, inSameDayAs: schedule.onceEnd)
-                ? schedule.onceEnd.formatted(date: .omitted, time: .shortened)
-                : schedule.onceEnd.formatted(.dateTime.month(.abbreviated).day().hour().minute())
-            return "\(day) · \(schedule.onceStart.formatted(date: .omitted, time: .shortened)) – \(end)"
+                ? calendar.format(schedule.onceEnd)
+                : calendar.format(schedule.onceEnd, as: .dateTime.month(.abbreviated).day().hour().minute())
+            return "\(day) · \(calendar.format(schedule.onceStart)) – \(end)"
         }
-        return "\(days(schedule.weekdays)) · \(time(schedule.startMinute)) – \(time(schedule.endMinute))"
+        let start = wallClockCalendar.format(wallClockDate(schedule.startMinute))
+        let end = wallClockCalendar.format(wallClockDate(schedule.endMinute))
+        return "\(days(schedule.weekdays, calendar: calendar)) · \(start) – \(end)"
     }
 
-    static func days(_ weekdays: Set<Int>) -> String {
-        let calendar = Calendar.autoupdatingCurrent
+    private static func days(_ weekdays: Set<Int>, calendar: Calendar) -> String {
         if weekdays.count == 7 { return "Every day" }
         if weekdays == [2, 3, 4, 5, 6] { return "Weekdays" }
         if weekdays == [1, 7] { return "Weekends" }
-        return orderedWeekdays.filter(weekdays.contains).map { calendar.shortWeekdaySymbols[$0 - 1] }.joined(separator: ", ")
+        return orderedWeekdays(in: calendar).filter(weekdays.contains).map { calendar.shortWeekdaySymbols[$0 - 1] }.joined(separator: ", ")
     }
 
-    static func time(_ minute: Int) -> String {
-        let date = Calendar.autoupdatingCurrent.date(bySettingHour: minute / 60, minute: minute % 60, second: 0, of: Date()) ?? Date()
-        return date.formatted(date: .omitted, time: .shortened)
+    // Weekly controls edit wall times, including hours that disappear on a clock-change day.
+    static var wallClockCalendar: Calendar {
+        var calendar = Calendar.autoupdatingCurrent
+        calendar.timeZone = .gmt
+        return calendar
     }
 
-    static var orderedWeekdays: [Int] {
-        let first = Calendar.autoupdatingCurrent.firstWeekday
+    static func wallClockDate(_ minute: Int) -> Date {
+        // Foundation's reference date is midnight UTC.
+        Date(timeIntervalSinceReferenceDate: TimeInterval(minute) * 60)
+    }
+
+    static func orderedWeekdays(in calendar: Calendar) -> [Int] {
+        let first = calendar.firstWeekday
         return (0..<7).map { (first - 1 + $0) % 7 + 1 }
+    }
+
+    static func timeZoneName(_ identifier: String) -> String {
+        identifier.replacingOccurrences(of: "_", with: " ")
+    }
+}
+
+extension Calendar {
+    func format(_ date: Date, as style: Date.FormatStyle = .dateTime.hour().minute()) -> String {
+        var style = style
+        style.calendar = self
+        style.timeZone = timeZone
+        return date.formatted(style)
     }
 }

@@ -28,6 +28,7 @@ final class ZoneModel {
     var editingList: BlockList?
     var editingSchedule: FocusSchedule?
     enum SettingsPane: Hashable { case general, websites }
+    enum TimeZoneChangeResult { case saved, startsSession, failed }
     var settingsPane: SettingsPane = .general
     var selectedListID: UUID? {
         didSet { UserDefaults.standard.set(selectedListID?.uuidString, forKey: "selectedListID") }
@@ -91,9 +92,10 @@ final class ZoneModel {
 
     var selectedList: BlockList? { document.blockLists.first { $0.id == selectedListID } }
     var availableLists: [BlockList] { document.blockLists.filter { !$0.isEmpty } }
+    var calendar: Calendar { document.calendar }
     var nextScheduledSession: (name: String, start: Date)? {
         document.schedules.compactMap { schedule -> (name: String, start: Date)? in
-            guard let interval = SessionEngine.nextInterval(for: schedule, after: now) else { return nil }
+            guard let interval = nextInterval(for: schedule) else { return nil }
             return (schedule.name, interval.start)
         }.min { $0.start < $1.start }
     }
@@ -128,13 +130,21 @@ final class ZoneModel {
 
     func isRunning(_ schedule: FocusSchedule) -> Bool { activeSessions.contains { $0.scheduleID == schedule.id } }
     func runningSession(for schedule: FocusSchedule) -> FocusSession? { activeSessions.first { $0.scheduleID == schedule.id } }
+    func nextInterval(for schedule: FocusSchedule) -> DateInterval? {
+        let occupiedUntil = document.sessions.lazy.filter { $0.scheduleID == schedule.id && $0.startsAt <= self.now }
+            .map(\.endsAt).max()
+        return SessionEngine.nextInterval(for: schedule, after: now, calendar: calendar, occupiedUntil: occupiedUntil)
+    }
+    func wouldStartNow(_ schedule: FocusSchedule) -> Bool {
+        SessionEngine.activeInterval(for: schedule, at: Date(), calendar: calendar) != nil
+    }
     var isEditing: Bool { editingList != nil || editingSchedule != nil }
 
     /// Running schedules first, then by their next start; schedules that are off come last.
     var schedulesByNextStart: [FocusSchedule] {
         let ranked = document.schedules.map { schedule -> (schedule: FocusSchedule, group: Int, date: Date) in
             if let session = runningSession(for: schedule) { return (schedule, 0, session.endsAt) }
-            if let next = SessionEngine.nextInterval(for: schedule, after: now) { return (schedule, 1, next.start) }
+            if let next = nextInterval(for: schedule) { return (schedule, 1, next.start) }
             return (schedule, schedule.isEnabled ? 2 : 3, .distantFuture)
         }
         return ranked.sorted { a, b in
@@ -189,6 +199,20 @@ final class ZoneModel {
             if mode == .network { filter.update(document) }
             tick()
         }
+    }
+
+    func setTimeZone(_ identifier: String?, allowStartingSession: Bool = false) -> TimeZoneChangeResult {
+        guard document.timeZoneIdentifier != identifier else { return .saved }
+        var next = document
+        next.timeZoneIdentifier = identifier
+        SessionEngine.materialize(&next, at: Date())
+        if !allowStartingSession {
+            let existingIDs = Set(document.sessions.map(\.id))
+            if next.sessions.contains(where: { !existingIDs.contains($0.id) }) { return .startsSession }
+        }
+        guard commit(next) else { return .failed }
+        tick()
+        return .saved
     }
 
     func tick() {
@@ -255,7 +279,7 @@ final class ZoneModel {
 
     func saveSchedule(_ schedule: FocusSchedule) -> Bool {
         if let session = runningSession(for: schedule) {
-            errorMessage = Self.runningScheduleMessage(session)
+            errorMessage = runningScheduleMessage(session)
             return false
         }
         do {
@@ -266,6 +290,8 @@ final class ZoneModel {
                 return false
             }
             var next = document
+            let editedAt = Date()
+            next.sessions.removeAll { $0.scheduleID == schedule.id && $0.endsAt <= editedAt }
             if let index = next.schedules.firstIndex(where: { $0.id == schedule.id }) { next.schedules[index] = schedule }
             else { next.schedules.append(schedule) }
             let saved = commit(next)
@@ -276,7 +302,7 @@ final class ZoneModel {
 
     func deleteSchedule(_ schedule: FocusSchedule) {
         if let session = runningSession(for: schedule) {
-            errorMessage = Self.runningScheduleMessage(session)
+            errorMessage = runningScheduleMessage(session)
             return
         }
         var next = document
@@ -285,8 +311,8 @@ final class ZoneModel {
     }
 
     /// Scheduled sessions are strict: their schedule stays as it is until the session ends.
-    static func runningScheduleMessage(_ session: FocusSession) -> String {
-        "This schedule is running. You can change it after it ends at \(session.endsAt.formatted(date: .omitted, time: .shortened))."
+    func runningScheduleMessage(_ session: FocusSession) -> String {
+        "This schedule is running. You can change it after it ends at \(calendar.format(session.endsAt))."
     }
 
     func setLogin(_ enabled: Bool) {

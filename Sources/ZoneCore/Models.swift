@@ -102,7 +102,7 @@ public struct FocusSchedule: Codable, Equatable, Identifiable, Sendable {
     public var blockListID: UUID
     public var isEnabled: Bool
     public var kind: ScheduleKind
-    /// Calendar weekday: Sunday = 1, Saturday = 7. Dates follow the Mac's current time zone.
+    /// Calendar weekday: Sunday = 1, Saturday = 7. Weekly times use the document's calendar.
     public var weekdays: Set<Int>
     public var startMinute: Int
     public var endMinute: Int
@@ -137,14 +137,25 @@ public struct ZoneDocument: Codable, Equatable, Sendable {
     public var sessions: [FocusSession]
     public var defaultOptions: SessionOptions
     public var defaultMinutes: Int
+    public var timeZoneIdentifier: String?
+
+    public var calendar: Calendar {
+        var calendar = Calendar.autoupdatingCurrent
+        if let timeZoneIdentifier, let timeZone = TimeZone(identifier: timeZoneIdentifier) {
+            calendar.timeZone = timeZone
+        }
+        return calendar
+    }
 
     public init(blockLists: [BlockList] = [BlockList()], schedules: [FocusSchedule] = [],
-                sessions: [FocusSession] = [], defaultOptions: SessionOptions = SessionOptions(), defaultMinutes: Int = 25) {
+                sessions: [FocusSession] = [], defaultOptions: SessionOptions = SessionOptions(), defaultMinutes: Int = 25,
+                timeZoneIdentifier: String? = nil) {
         self.blockLists = blockLists
         self.schedules = schedules
         self.sessions = sessions
         self.defaultOptions = defaultOptions
         self.defaultMinutes = defaultMinutes
+        self.timeZoneIdentifier = timeZoneIdentifier
     }
 }
 

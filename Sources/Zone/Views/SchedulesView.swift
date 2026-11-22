@@ -26,14 +26,16 @@ struct SchedulesView: View {
                     ScheduleRow(schedule: schedule, model: model, setEnabled: { enabled in
                         var next = schedule
                         next.isEnabled = enabled
-                        if enabled && SessionEngine.activeInterval(for: next, at: Date()) != nil {
+                        if model.wouldStartNow(next) {
                             enabling = next
                         } else { _ = model.saveSchedule(next) }
                     }, delete: { deleting = schedule })
                 }.listStyle(.inset)
             }
             VStack(spacing: 6) {
-                Text("Times follow this Mac’s time zone. Zone must be running for sessions to start.")
+                Text(model.document.timeZoneIdentifier.map {
+                    "Times use \(ScheduleFormat.timeZoneName($0)). Zone must be running for sessions to start."
+                } ?? "Times follow this Mac’s time zone. Zone must be running for sessions to start.")
                     .font(.caption).foregroundStyle(.secondary)
                 if !model.launchAtLogin {
                     Button("Set Up Open at Login…") {
@@ -115,7 +117,7 @@ private struct ScheduleRow: View {
     }
 
     private var summary: String {
-        ScheduleFormat.summary(schedule)
+        ScheduleFormat.summary(schedule, calendar: model.calendar)
             + (schedule.kind == .weekly && schedule.endMinute < schedule.startMinute ? " (next day)" : "")
     }
 
@@ -137,7 +139,7 @@ struct ScheduleEditor: View {
     private var isRunning: Bool { model.isRunning(schedule) }
 
     private var validationMessage: String? {
-        if let session = model.runningSession(for: schedule) { return ZoneModel.runningScheduleMessage(session) }
+        if let session = model.runningSession(for: schedule) { return model.runningScheduleMessage(session) }
         if schedule.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return "Enter a name for this schedule." }
         if schedule.kind == .weekly {
             if schedule.weekdays.isEmpty { return "Choose at least one day." }
@@ -153,6 +155,7 @@ struct ScheduleEditor: View {
     }
 
     var body: some View {
+        let calendar = model.calendar
         VStack(alignment: .leading, spacing: 20) {
             Text(model.document.schedules.contains { $0.id == schedule.id } ? "Edit Schedule" : "New Schedule")
                 .font(.title2.weight(.semibold))
@@ -168,24 +171,31 @@ struct ScheduleEditor: View {
                 if schedule.kind == .weekly {
                     LabeledContent("Days") {
                         HStack(spacing: 4) {
-                            ForEach(ScheduleFormat.orderedWeekdays, id: \.self) { day in
+                            ForEach(ScheduleFormat.orderedWeekdays(in: calendar), id: \.self) { day in
                                 Toggle(isOn: Binding(get: { schedule.weekdays.contains(day) }, set: { selected in
                                     if selected { schedule.weekdays.insert(day) } else { schedule.weekdays.remove(day) }
                                 })) {
-                                    Text(Calendar.autoupdatingCurrent.shortWeekdaySymbols[day - 1])
+                                    Text(calendar.shortWeekdaySymbols[day - 1])
                                 }.toggleStyle(.button).controlSize(.small)
-                                    .accessibilityLabel(Calendar.autoupdatingCurrent.weekdaySymbols[day - 1])
+                                    .accessibilityLabel(calendar.weekdaySymbols[day - 1])
                             }
                         }
                     }
-                    DatePicker("From", selection: timeBinding(\.startMinute), displayedComponents: .hourAndMinute)
-                    DatePicker("Until", selection: timeBinding(\.endMinute), displayedComponents: .hourAndMinute)
+                    Group {
+                        DatePicker("From", selection: timeBinding(\.startMinute), displayedComponents: .hourAndMinute)
+                        DatePicker("Until", selection: timeBinding(\.endMinute), displayedComponents: .hourAndMinute)
+                    }.environment(\.calendar, ScheduleFormat.wallClockCalendar).environment(\.timeZone, .gmt)
                     if schedule.endMinute < schedule.startMinute {
                         Text("Finishes the next day.").font(.caption).foregroundStyle(.secondary)
                     }
                 } else {
-                    DatePicker("From", selection: $schedule.onceStart, displayedComponents: [.date, .hourAndMinute])
-                    DatePicker("Until", selection: $schedule.onceEnd, displayedComponents: [.date, .hourAndMinute])
+                    Group {
+                        DatePicker("From", selection: $schedule.onceStart, displayedComponents: [.date, .hourAndMinute])
+                        DatePicker("Until", selection: $schedule.onceEnd, displayedComponents: [.date, .hourAndMinute])
+                    }.environment(\.calendar, calendar).environment(\.timeZone, calendar.timeZone)
+                }
+                if let identifier = model.document.timeZoneIdentifier {
+                    LabeledContent("Time Zone", value: ScheduleFormat.timeZoneName(identifier))
                 }
                 Toggle("Enabled", isOn: $schedule.isEnabled)
             }.formStyle(.columns).disabled(isRunning)
@@ -200,7 +210,7 @@ struct ScheduleEditor: View {
                 Spacer()
                 Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
                 Button("Save Schedule") {
-                    if schedule.isEnabled, SessionEngine.activeInterval(for: schedule, at: Date()) != nil { confirmSave = true }
+                    if model.wouldStartNow(schedule) { confirmSave = true }
                     else { save() }
                 }.buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
                     .disabled(validationMessage != nil)
@@ -218,11 +228,8 @@ struct ScheduleEditor: View {
     }
 
     private func timeBinding(_ keyPath: WritableKeyPath<FocusSchedule, Int>) -> Binding<Date> {
-        Binding(get: {
-            let minutes = schedule[keyPath: keyPath]
-            return Calendar.autoupdatingCurrent.date(bySettingHour: minutes / 60, minute: minutes % 60, second: 0, of: Date()) ?? Date()
-        }, set: { date in
-            let parts = Calendar.autoupdatingCurrent.dateComponents([.hour, .minute], from: date)
+        Binding(get: { ScheduleFormat.wallClockDate(schedule[keyPath: keyPath]) }, set: { date in
+            let parts = ScheduleFormat.wallClockCalendar.dateComponents([.hour, .minute], from: date)
             schedule[keyPath: keyPath] = (parts.hour ?? 0) * 60 + (parts.minute ?? 0)
         })
     }

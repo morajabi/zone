@@ -37,6 +37,12 @@ struct SettingsView: View {
 
 private struct GeneralSettings: View {
     let model: ZoneModel
+    @State private var showingTimeZonePicker = false
+
+    private var timeZoneName: String {
+        model.document.timeZoneIdentifier.map(ScheduleFormat.timeZoneName) ?? "System Time Zone"
+    }
+
     var body: some View {
         Form {
             Section {
@@ -45,6 +51,16 @@ private struct GeneralSettings: View {
                     .font(.caption).foregroundStyle(.secondary)
             }
             Section("Sessions") {
+                HStack(spacing: 10) {
+                    Text("Time Zone")
+                    Spacer()
+                    Text(timeZoneName).foregroundStyle(.secondary)
+                    Button("Change…") { showingTimeZonePicker = true }
+                        .accessibilityLabel("Change Time Zone")
+                        .accessibilityValue(timeZoneName)
+                }
+                Text("Weekly schedules and displayed times use this time zone.")
+                    .font(.caption).foregroundStyle(.secondary)
                 LabeledContent("Flexible", value: "End whenever you need")
                 LabeledContent("Locked", value: "Runs until its end")
                 LabeledContent("Scheduled", value: "Always runs until its end")
@@ -59,6 +75,68 @@ private struct GeneralSettings: View {
                 Link("Zone on GitHub", destination: URL(string: "https://github.com/morajabi/zone")!)
             }
         }.formStyle(.grouped)
+            .sheet(isPresented: $showingTimeZonePicker) { TimeZonePicker(model: model) }
+    }
+}
+
+private struct TimeZonePicker: View {
+    let model: ZoneModel
+    @Environment(\.dismiss) private var dismiss
+    @State private var query = ""
+    @State private var selection: String?
+    @State private var confirmStart = false
+
+    private static let identifiers = ["UTC"] + TimeZone.knownTimeZoneIdentifiers.filter { $0 != "UTC" }.sorted()
+
+    init(model: ZoneModel) {
+        self.model = model
+        _selection = State(initialValue: model.document.timeZoneIdentifier ?? "")
+    }
+
+    var body: some View {
+        let search = ScheduleFormat.timeZoneName(query.trimmingCharacters(in: .whitespacesAndNewlines))
+        let matches = search.isEmpty ? Self.identifiers : Self.identifiers.filter {
+            ScheduleFormat.timeZoneName($0).localizedStandardContains(search)
+        }
+        let showsSystem = search.isEmpty || "System Time Zone".localizedStandardContains(search)
+        let canSave = selection.map { $0.isEmpty ? showsSystem : matches.contains($0) } ?? false
+
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Time Zone").font(.headline)
+            TextField("Search time zones", text: $query).textFieldStyle(.roundedBorder)
+            if matches.isEmpty && !showsSystem {
+                ContentUnavailableView.search(text: query).frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                List(selection: $selection) {
+                    if showsSystem {
+                        Text("System Time Zone").tag("")
+                    }
+                    ForEach(matches, id: \.self) { identifier in
+                        Text(ScheduleFormat.timeZoneName(identifier)).tag(identifier)
+                    }
+                }.listStyle(.inset)
+            }
+            HStack {
+                Spacer()
+                Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
+                Button("Save") { save() }.keyboardShortcut(.defaultAction)
+                    .disabled(!canSave)
+            }
+        }.padding(20).frame(width: 400, height: 410)
+            .alert("Change time zone and start focus?", isPresented: $confirmStart) {
+                Button("Cancel", role: .cancel) {}
+                Button("Change and Start") { save(allowStartingSession: true) }
+            } message: {
+                Text("At least one schedule will start immediately. Zone will close any apps those schedules block.")
+            }
+    }
+
+    private func save(allowStartingSession: Bool = false) {
+        guard let selection else { return }
+        switch model.setTimeZone(selection.isEmpty ? nil : selection, allowStartingSession: allowStartingSession) {
+        case .saved, .failed: dismiss()
+        case .startsSession: confirmStart = true
+        }
     }
 }
 

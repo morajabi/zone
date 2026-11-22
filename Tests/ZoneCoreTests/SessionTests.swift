@@ -142,10 +142,56 @@ struct SessionTests {
     @Test func oneOffCanStartAfterMissedWake() {
         let now = date()
         let schedule = FocusSchedule(blockListID: list.id, kind: .once, onceStart: now.addingTimeInterval(-3600), onceEnd: now.addingTimeInterval(3600))
-        let document = ZoneDocument(blockLists: [list], schedules: [schedule])
+        let document = ZoneDocument(blockLists: [list], schedules: [schedule], timeZoneIdentifier: "Pacific/Auckland")
         let active = SessionEngine.activeSessions(in: document, at: now)
         #expect(active.count == 1)
+        #expect(active.first?.startsAt == schedule.onceStart)
         #expect(active.first?.endsAt == schedule.onceEnd)
+    }
+
+    @Test func customTimeZoneDrivesWeeklySchedulesAndBlocking() throws {
+        let now = date()
+        let schedule = FocusSchedule(blockListID: list.id, weekdays: [2], startMinute: 540, endMinute: 660)
+        let document = ZoneDocument(blockLists: [list], schedules: [schedule], timeZoneIdentifier: "Asia/Tehran")
+        let savedPolicy = try JSONDecoder().decode(ZoneDocument.self, from: JSONEncoder().encode(document))
+        #expect(savedPolicy == document)
+        #expect(SessionEngine.nextInterval(for: schedule, after: now, calendar: savedPolicy.calendar)?.start == date(2026, 10, 26, 9))
+        #expect(SessionEngine.activeSessions(in: savedPolicy, at: now).first?.startsAt == date(2026, 10, 19, 9))
+        let rules = EffectiveRules(document: savedPolicy, at: now)
+        #expect(rules.domains == ["example.com"])
+        #expect(rules.applicationIDs == ["com.example.game"])
+
+        let browser = BrowserPolicy()
+        browser.update(savedPolicy, enabled: true)
+        #expect(browser.blocks("https://example.com", at: now))
+        var changed = savedPolicy
+        changed.timeZoneIdentifier = "UTC"
+        browser.update(changed, enabled: true)
+        #expect(!browser.blocks("https://example.com", at: now))
+    }
+
+    @Test func timeZoneChangePreservesRunningSessionThroughAnOverlappingOccurrence() throws {
+        let now = date()
+        let schedule = FocusSchedule(blockListID: list.id, weekdays: [2], startMinute: 540, endMinute: 660)
+        var document = ZoneDocument(blockLists: [list], schedules: [schedule], timeZoneIdentifier: "Asia/Tehran")
+        SessionEngine.materialize(&document, at: now)
+        try SessionEngine.pause(&document.sessions[0], at: now)
+        let original = try #require(document.sessions.first)
+
+        document.timeZoneIdentifier = "Asia/Bahrain"
+        let next = SessionEngine.nextInterval(for: schedule, after: original.startsAt, calendar: document.calendar,
+                                              occupiedUntil: original.endsAt)
+        #expect(next?.start == date(2026, 10, 26, 9, 30))
+        SessionEngine.materialize(&document, at: now)
+        #expect(document.sessions == [original])
+        #expect(EffectiveRules(document: document, at: now).domains.isEmpty)
+        #expect(EffectiveRules(document: document, at: now.addingTimeInterval(1800)).domains == ["example.com"])
+
+        SessionEngine.materialize(&document, at: original.endsAt)
+        #expect(SessionEngine.activeSessions(in: document, at: original.endsAt).isEmpty)
+        SessionEngine.materialize(&document, at: original.endsAt.addingTimeInterval(1800))
+        #expect(document.sessions.isEmpty)
+        #expect(SessionEngine.activeSessions(in: document, at: date(2026, 10, 26)).count == 1)
     }
 
     @Test func daylightSavingDoesNotCreateTwoOccurrences() throws {
@@ -186,7 +232,10 @@ struct SessionTests {
         try SessionEngine.pause(&session, at: date())
         let document = ZoneDocument(blockLists: [list], sessions: [session])
         try store.save(document)
-        #expect(try store.load() == document)
+        let loaded = try store.load()
+        #expect(loaded == document)
+        #expect(loaded.timeZoneIdentifier == nil)
+        #expect(loaded.calendar.timeZone.identifier == TimeZone.autoupdatingCurrent.identifier)
         try Data("broken".utf8).write(to: store.url)
         #expect(throws: (any Error).self) { try store.load() }
         #expect(try String(contentsOf: store.url, encoding: .utf8) == "broken")

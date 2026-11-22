@@ -45,35 +45,45 @@ public enum SessionEngine {
     }
 
     public static func nextInterval(for schedule: FocusSchedule, after now: Date,
-                                    calendar: Calendar = .autoupdatingCurrent) -> DateInterval? {
+                                    calendar: Calendar = .autoupdatingCurrent, occupiedUntil: Date? = nil) -> DateInterval? {
         guard schedule.isEnabled else { return nil }
+        let earliest = max(now, occupiedUntil ?? now)
         if schedule.kind == .once {
-            return schedule.onceStart > now ? DateInterval(start: schedule.onceStart, end: schedule.onceEnd) : nil
+            guard schedule.onceStart > now, schedule.onceStart >= earliest else { return nil }
+            return DateInterval(start: schedule.onceStart, end: schedule.onceEnd)
         }
         for offset in 0...7 {
-            guard let day = calendar.date(byAdding: .day, value: offset, to: now),
+            guard let day = calendar.date(byAdding: .day, value: offset, to: earliest),
                   let interval = occurrence(of: schedule, startingOn: day, calendar: calendar),
-                  interval.start > now else { continue }
+                  interval.start > now, interval.start >= earliest else { continue }
             return interval
         }
         return nil
     }
 
     public static func materialize(_ document: inout ZoneDocument, at now: Date,
-                                   calendar: Calendar = .autoupdatingCurrent) {
-        document.sessions.removeAll { $0.endsAt <= now }
+                                   calendar: Calendar? = nil) {
+        let calendar = calendar ?? document.calendar
+        var overlappingSessionIDs: Set<String> = []
         for schedule in document.schedules {
             guard let interval = activeInterval(for: schedule, at: now, calendar: calendar),
                   let list = document.blockLists.first(where: { $0.id == schedule.blockListID }), !list.isEmpty else { continue }
             let id = schedule.id.uuidString + ":" + String(Int(interval.start.timeIntervalSince1970))
-            guard !document.sessions.contains(where: { $0.id == id }) else { continue }
+            // Keep an earlier overlapping session on record through the shifted occurrence's end.
+            if let existing = document.sessions.first(where: {
+                $0.id == id || ($0.scheduleID == schedule.id && $0.startsAt < interval.end && interval.start < $0.endsAt)
+            }) {
+                overlappingSessionIDs.insert(existing.id)
+                continue
+            }
             document.sessions.append(FocusSession(id: id, name: schedule.name, blockList: list,
                 startsAt: interval.start, endsAt: interval.end, options: schedule.options, scheduleID: schedule.id))
         }
+        document.sessions.removeAll { $0.endsAt <= now && !overlappingSessionIDs.contains($0.id) }
     }
 
     public static func activeSessions(in document: ZoneDocument, at now: Date,
-                                      calendar: Calendar = .autoupdatingCurrent) -> [FocusSession] {
+                                      calendar: Calendar? = nil) -> [FocusSession] {
         var copy = document
         materialize(&copy, at: now, calendar: calendar)
         return copy.sessions.filter { $0.isActive(at: now) }.sorted { $0.endsAt < $1.endsAt }
@@ -107,7 +117,7 @@ public struct EffectiveRules: Equatable, Sendable {
     public var domains: Set<String>
     public var applicationIDs: Set<String>
 
-    public init(document: ZoneDocument, at now: Date, calendar: Calendar = .autoupdatingCurrent) {
+    public init(document: ZoneDocument, at now: Date, calendar: Calendar? = nil) {
         let sessions = SessionEngine.activeSessions(in: document, at: now, calendar: calendar).filter { !$0.isPaused(at: now) }
         domains = Set(sessions.flatMap { $0.blockList.domains })
         applicationIDs = Set(sessions.flatMap { $0.blockList.apps.map(\.bundleID) })
